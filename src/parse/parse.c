@@ -48,161 +48,154 @@ static t_lexer *expect_token(tok_type type, t_lexer **cur)
     return consume_token(cur);
 }
 
+static int is_redir_token(t_lexer *pt)
+{
+    if (pt->tokentype == TOK_REDIR_IN || pt->tokentype == TOK_REDIR_OUT || pt->tokentype == TOK_APPEND || pt->tokentype == TOK_HEREDOC)
+        return (1);
+    else
+        return (0);
+}
 
+ast *parse_subshell(t_lexer **cur, ast *node)
+{
+    consume_token(cur);
+    node->type = NODE_SUBSHELL;
+    node->sub = parse_and_or(cur);
+    if (!expect_token(TOK_RPAREN, cur))
+    {
+        fprintf(stderr, "Syntax error: expected ')'\n");
+        free_ast(node);
+        return NULL;
+    }
+    return node;
+}
 
-/* ---------- parse implementations ---------- */
+void process_redir(t_lexer *redir, t_lexer *file, ast *node)
+{
+    switch (redir->tokentype)
+    {
+    case TOK_REDIR_IN:
+        free(node->redir_in);
+        node->redir_in = strdup(file->str);
+        break;
+    case TOK_REDIR_OUT:
+        free(node->redir_out);
+        node->redir_out = strdup(file->str);
+        break;
+    case TOK_APPEND:
+        free(node->redir_append);
+        node->redir_append = strdup(file->str);
+        break;
+    case TOK_HEREDOC:
+        free(node->heredoc_delim);
+        node->heredoc_delim = strdup(file->str);
+        break;
+    default:
+        break;
+    }
+}
+ast *parse_pre_redir(t_lexer **cur, ast *node)
+{
+    t_lexer *redir;
+    t_lexer *file;
 
-ast *parse_simple_cmd(t_lexer **cur)
+    redir = consume_token(cur);
+    file = expect_token(TOK_WORD, cur);
+    if (!file)
+    {
+        fprintf(stderr, "Syntax error: expected filename after redirection\n");
+        free_ast(node);
+        return NULL;
+    }
+    process_redir(redir, file, node);
+    return (node);
+}
+
+ast *parse_cmd_argv(t_lexer **cur, ast *node, size_t *argv_cap, size_t *argc)
 {
     t_lexer *t;
-    t_lexer *pt = peek_token(cur);
-    if (pt && pt->tokentype == TOK_LPAREN)
+    char **tmp;
+
+    t = consume_token(cur);
+    if (*argc + 1 >= *argv_cap)
     {
-        /* subshell: consume "(" */
-        consume_token(cur);
-        ast *node = calloc(1, sizeof(ast));
-        if (!node)
-            return NULL;
-        node->type = NODE_SUBSHELL;
-        node->sub = parse_and_or(cur);
-        /* expect ")" */
-        if (!expect_token(TOK_RPAREN, cur))
+        *argv_cap *= 2;
+        tmp = realloc(node->argv, *argv_cap * sizeof(char *));
+        if (!tmp)
         {
-            fprintf(stderr, "Syntax error: expected ')'\n");
+            fprintf(stderr, "realloc failed\n");
             free_ast(node);
             return NULL;
         }
-        return node;
+        node->argv = tmp;
     }
+    node->argv[*argc] = strdup(t->str);
+    (*argc)++;
+    return (node);
+}
 
-    /* normal command */
-    ast *node = calloc(1, sizeof(ast));
-    if (!node)
-        return NULL;
+void *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
+{
+    size_t argv_cap;
+    size_t argc;
+    t_lexer *t;
+
+    argv_cap = 8;
+    argc = 0;
+    node->argv = calloc(argv_cap, sizeof(char *));
+    if (!node->argv)
+        return (free(node), NULL);
+    if (!pt || pt->tokentype != TOK_WORD)
+        return (fprintf(stderr, "Syntax error: expected command name\n"), free_ast(node), NULL);
+    t = consume_token(cur);
+    node->argv[argc] = strdup(t->str);
+    argc++;
+    while ((pt = peek_token(cur)) && (pt->tokentype == TOK_WORD || is_redir_token(pt)))     
+    {
+        if (pt->tokentype == TOK_WORD)
+            parse_cmd_argv(cur, node, &argv_cap, &argc);
+        else
+            parse_pre_redir(cur, node);
+    }
+    node->argv[argc] = NULL;
+    return (node);
+}
+
+ast *parse_normal_cmd(t_lexer **cur, ast *node)
+{
+    size_t argv_cap;
+    size_t argc;
+    t_lexer *pt;
+
     node->type = NODE_CMD;
-
-    size_t argv_cap = 8;
-    size_t argc = 0;
+    argv_cap = 8;
+    argc = 0;
     node->argv = calloc(argv_cap, sizeof(char *));
     if (!node->argv)
     {
         free(node);
         return NULL;
     }
+    while ((pt = peek_token(cur)) && is_redir_token(pt))
+        parse_pre_redir(cur, node);
+    parse_normal_cmd_redir(cur, node, pt);
+    return (node);
+}
 
-    /* prefix redirections: while current token is a redirection */
-    while ((pt = peek_token(cur)) &&
-           (pt->tokentype == TOK_REDIR_IN ||
-            pt->tokentype == TOK_REDIR_OUT ||
-            pt->tokentype == TOK_APPEND ||
-            pt->tokentype == TOK_HEREDOC))
-    {
-        t_lexer *redir = consume_token(cur);
-        t_lexer *file = expect_token(TOK_WORD, cur);
-        if (!file)
-        {
-            fprintf(stderr, "Syntax error: expected filename after redirection\n");
-            free_ast(node);
-            return NULL;
-        }
-        switch (redir->tokentype)
-        {
-        case TOK_REDIR_IN:
-            free(node->redir_in);
-            node->redir_in = strdup(file->str);
-            break;
-        case TOK_REDIR_OUT:
-            free(node->redir_out);
-            node->redir_out = strdup(file->str);
-            break;
-        case TOK_APPEND:
-            free(node->redir_append);
-            node->redir_append = strdup(file->str);
-            break;
-        case TOK_HEREDOC:
-            free(node->heredoc_delim);
-            node->heredoc_delim = strdup(file->str);
-            break;
-        default:
-            break;
-        }
-    }
+ast *parse_simple_cmd(t_lexer **cur)
+{
+    ast *node;
+    t_lexer *pt;
 
-    /* next token must be a word (command name) */
     pt = peek_token(cur);
-    if (!pt || pt->tokentype != TOK_WORD)
-    {
-        fprintf(stderr, "Syntax error: expected command name\n");
-        free_ast(node);
-        return NULL;
-    }
+    node = calloc(1, sizeof(ast));
+    if (!node)
+        return (NULL);
+    if (pt && pt->tokentype == TOK_LPAREN)
+        return (parse_subshell(cur, node));
 
-    /* consume the command name */
-    t = consume_token(cur);
-    node->argv[argc++] = strdup(t->str);
-
-    /* now loop over additional words and redirections */
-    while ((pt = peek_token(cur)) &&
-           (pt->tokentype == TOK_WORD ||
-            pt->tokentype == TOK_REDIR_IN ||
-            pt->tokentype == TOK_REDIR_OUT ||
-            pt->tokentype == TOK_APPEND ||
-            pt->tokentype == TOK_HEREDOC))
-    {
-        if (pt->tokentype == TOK_WORD)
-        {
-            t = consume_token(cur);
-            if (argc + 1 >= argv_cap)
-            {
-                argv_cap *= 2;
-                char **tmp = realloc(node->argv, argv_cap * sizeof(char *));
-                if (!tmp)
-                {
-                    fprintf(stderr, "realloc failed\n");
-                    free_ast(node);
-                    return NULL;
-                }
-                node->argv = tmp;
-            }
-            node->argv[argc++] = strdup(t->str);
-        }
-        else
-        {
-            /* redirection */
-            t_lexer *redir = consume_token(cur);
-            t_lexer *file = expect_token(TOK_WORD, cur);
-            if (!file)
-            {
-                fprintf(stderr, "Syntax error: expected filename after redirection\n");
-                free_ast(node);
-                return NULL;
-            }
-            switch (redir->tokentype)
-            {
-            case TOK_REDIR_IN:
-                free(node->redir_in);
-                node->redir_in = strdup(file->str);
-                break;
-            case TOK_REDIR_OUT:
-                free(node->redir_out);
-                node->redir_out = strdup(file->str);
-                break;
-            case TOK_APPEND:
-                free(node->redir_append);
-                node->redir_append = strdup(file->str);
-                break;
-            case TOK_HEREDOC:
-                free(node->heredoc_delim);
-                node->heredoc_delim = strdup(file->str);
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    node->argv[argc] = NULL;
-    return node;
+    /* normal command */
+    return (parse_normal_cmd(cur, node));
 }
 
 ast *parse_pipeline(t_lexer **cur)
@@ -211,10 +204,8 @@ ast *parse_pipeline(t_lexer **cur)
     int n_pipes = 0;
     if (!left)
         return NULL;
-
     while (peek_token(cur) && peek_token(cur)->tokentype == TOK_PIPE)
     {
-        /* consume '|' */
         consume_token(cur);
         ast *right = parse_simple_cmd(cur);
         if (!right)
@@ -399,7 +390,7 @@ int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
-    
+
     char buf[1024];
 
     printf("Enter a shell command:\n");
