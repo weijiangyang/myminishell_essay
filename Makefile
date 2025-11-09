@@ -15,7 +15,7 @@ LIBFT = $(LIBFTDIR)/libft.a
 CC = cc
 CFLAGS = -Wall -Wextra -Werror -I$(INCDIR) -I$(LIBFTDIR)
 
-# 查找所有源文件（递归子目录）
+# 查找所有源文件（递归 src 子目录）
 SRC = $(shell find $(SRCDIR) -type f -name "*.c")
 OBJ = $(SRC:.c=.o)
 
@@ -23,16 +23,15 @@ OBJ = $(SRC:.c=.o)
 
 all: $(LIBFT) $(NAME)
 
+# 编译 libft
 $(LIBFT):
 	@make -C $(LIBFTDIR)
 
-$(NAME): $(OBJ)	
-	$(CC) $(CFLAGS) $(OBJ) -L/opt/homebrew/opt/readline/lib -lreadline -o $(NAME)
+# 链接 minishell，可用 Linux readline 库
+$(NAME): $(OBJ) $(LIBFT)
+	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) -lreadline -o $(NAME)
 
-
-
-# 单个 .c 到 .o 的规则
-# 使用通配符 +自动创建目录
+# 单个 .c 到 .o
 %.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
