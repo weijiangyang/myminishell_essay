@@ -1,47 +1,43 @@
 # —————————————— 项目配置 ——————————————
-
-# 可执行文件名称
 NAME = minishell
-
-# 路径定义
 INCDIR = include
 SRCDIR = src
 LIBFTDIR = libft
+BUILD = build
 
-# libft 静态库
 LIBFT = $(LIBFTDIR)/libft.a
-
-# 编译器 & 编译选项
 CC = cc
 CFLAGS = -Wall -Wextra -Werror -I$(INCDIR) -I$(LIBFTDIR)
 
-# 查找所有源文件（递归 src 子目录）
+# 查找所有源文件
 SRC = $(shell find $(SRCDIR) -type f -name "*.c")
-OBJ = $(SRC:.c=.o)
+
+# 将 src/*.c 转换为 build/*.o
+OBJ = $(patsubst $(SRCDIR)/%.c,$(BUILD)/%.o,$(SRC))
 
 # —————————————— 规则 ——————————————
 
 all: $(LIBFT) $(NAME)
 
-# 编译 libft
 $(LIBFT):
 	@make -C $(LIBFTDIR)
 
-# 链接 minishell，可用 Linux readline 库
+# 链接 minishell
 $(NAME): $(OBJ) $(LIBFT)
 	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) -lreadline -o $(NAME)
 
-# 单个 .c 到 .o
-%.o: %.c
+# 单文件编译规则：build/ 目录自动创建
+$(BUILD)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# 清理
 clean:
-	@rm -f $(OBJ)
+	@rm -rf $(BUILD)
 	@make -C $(LIBFTDIR) clean
 
 fclean: clean
-	@rm -f $(NAME)
+	@rm -f $(NAME) a.out
 	@make -C $(LIBFTDIR) fclean
 
 re: fclean all
