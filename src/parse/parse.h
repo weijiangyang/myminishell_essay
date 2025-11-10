@@ -27,7 +27,7 @@ typedef struct s_ast
     struct s_ast *sub;
 } ast;
 
-// 全局或上下文中的token游标
+
 ast *parse_simple_cmd(t_lexer **cur);
 ast *parse_pipeline(t_lexer **cur);
 ast *parse_and_or(t_lexer **cur);

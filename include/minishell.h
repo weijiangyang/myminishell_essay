@@ -11,11 +11,14 @@
 #include <readline/history.h>
 #include <string.h>
 #include <ctype.h>
+#include <fcntl.h>
 
 typedef struct s_minishell t_minishell;
 
 #include "../src/lexer/lexer.h"
+
 #include "../src/parse/parse.h"
+#include "../src/exec/exec.h"
 
 extern volatile sig_atomic_t g_signal;
 
@@ -38,3 +41,4 @@ typedef struct s_minishell
 } t_minishell;
 
 #endif
+

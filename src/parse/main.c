@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     {
         printf("=== AST ===\n");
         print_ast(root, 0);
+        exec_ast(root);
         free_ast(root);
     }
     else
