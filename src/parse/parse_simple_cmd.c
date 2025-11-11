@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parse_simple_cmd.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: weiyang <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/11 17:29:58 by weiyang           #+#    #+#             */
+/*   Updated: 2025/11/11 17:30:01 by weiyang          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 /*
@@ -86,7 +98,17 @@ static void *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
 
     // argv 数组以 NULL 结尾，方便执行阶段使用 execvp 等
     node->argv[argc] = NULL;
-
+    // 👇 这里添加对 & 的检测
+    pt = peek_token(cur);
+    if (pt && pt->tokentype == TOK_AMP) // 假设 & 的类型是 TOK_AMP
+    {
+        consume_token(cur);      // 消费掉 &
+        node->is_background = 1; // 标记为后台命令
+    }
+    else
+    {
+        node->is_background = 0; // 默认前台
+    }
     return (node);
 }
 

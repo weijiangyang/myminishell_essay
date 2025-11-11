@@ -7,9 +7,10 @@ volatile sig_atomic_t g_signal = 0;
 void print_lexer(t_lexer *lexer)
 {
     t_lexer *tmp = lexer;
+    
     int i = 0;
 
-    while (tmp)
+    while (tmp && tmp->tokentype != TOK_END)
     {
         if (!tmp->str)
         {

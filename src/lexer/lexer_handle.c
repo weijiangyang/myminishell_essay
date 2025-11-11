@@ -77,6 +77,8 @@ int	handle_lexer(t_minishell *general)
 		}
 		i += j;
 	}
+	
+	add_node(NULL, TOK_END, &general->lexer);//把一个 “结束标记 token” (TOK_END) 添加到 general->lexer 链表末尾
 	return (1);
 }
 

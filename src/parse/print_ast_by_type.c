@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   print_ast_by_type.c                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: weiyang <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/11 17:30:54 by weiyang           #+#    #+#             */
+/*   Updated: 2025/11/11 17:30:57 by weiyang          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 /*
@@ -33,6 +45,8 @@ void print_ast_cmd(ast *node)
         printf(" >> %s", node->redir_append);
     if (node->heredoc_delim)
         printf(" << %s", node->heredoc_delim);
+    if (node->is_background)
+        printf("&");
 
     printf("\n"); // 换行
 }
