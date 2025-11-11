@@ -5,48 +5,70 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    char buf[1024];
+    char *buf;
+    t_minishell *general;
 
-    printf("Enter a shell command:\n");
-    if (!fgets(buf, sizeof(buf), stdin))
+    while (1)
     {
-        return 0;
-    }
-    /* strip newline */
-    buf[strcspn(buf, "\n")] = '\0';
+        buf = readline("minishell> "); // ✅ 提示符
+        if (!buf)
+        {
+            printf("exit\n");
+            break; // EOF（Ctrl+D）
+        }
 
-    t_minishell *general = calloc(1, sizeof(t_minishell));
-    general->raw_line = buf;
-    if (!general)
-        return 1;
-    if (handle_lexer(general))
-    {
-        printf("Lexer tokens:\n");
-        print_lexer(general->lexer);
-    }
-    if (!general->lexer)
-    {
-        fprintf(stderr, "tokenize failed\n");
-        return 1;
+        if (*buf == '\0')
+        {
+            free(buf);
+            continue; // 空输入，直接重新读取
+        }
+
+        add_history(buf); // 保存历史
+
+        general = calloc(1, sizeof(t_minishell));
+        if (!general)
+        {
+            perror("calloc");
+            free(buf);
+            break;
+        }
+        general->raw_line = buf;
+
+        // === Lexer 阶段 ===
+        if (handle_lexer(general))
+        {
+            printf("Lexer tokens:\n");
+            print_lexer(general->lexer);
+        }
+        if (!general->lexer)
+        {
+            fprintf(stderr, "tokenize failed\n");
+            free(buf);
+            free(general);
+            continue;
+        }
+
+        // === Parser 阶段 ===
+        t_lexer *cursor = general->lexer;
+        ast *root = parse_cmdline(&cursor);
+        if (root)
+        {
+            printf("=== AST ===\n");
+            print_ast(root, 0);
+            exec_ast(root);
+            free_ast(root);
+        }
+        else
+        {
+            fprintf(stderr, "Parsing failed.\n");
+        }
+
+        // === 清理内存 ===
+        free_tokens(general->lexer);
+        free(buf);
+        free(general);
     }
 
-    /* parser now uses a cursor pointer */
-    t_lexer *cursor = general->lexer;
-    ast *root = parse_cmdline(&cursor);
-    if (root)
-    {
-        printf("=== AST ===\n");
-        print_ast(root, 0);
-        exec_ast(root);
-        free_ast(root);
-    }
-    else
-    {
-        fprintf(stderr, "Parsing failed.\n");
-    }
-
-    free_tokens(general->lexer);
-    free(general);
-
+    rl_clear_history();
     return 0;
 }

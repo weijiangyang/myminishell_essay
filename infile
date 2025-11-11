@@ -1,13 +1,1 @@
-total 44
-drwxr-xr-x 8 weiyang 2025_paris   142 Nov 10 17:56 .
-drwxr-xr-x 7 weiyang 2025_paris   149 Nov  3 11:27 ..
-drwxr-xr-x 6 weiyang 2025_paris    56 Nov 10 17:49 build
-drwxr-xr-x 8 weiyang 2025_paris   185 Nov 10 15:27 .git
-drwxr-xr-x 2 weiyang 2025_paris    25 Nov  3 11:27 include
--rw-r--r-- 1 weiyang 2025_paris     0 Nov 10 17:57 infile
-drwxr-xr-x 2 weiyang 2025_paris  4096 Nov 10 17:49 libft
--rw-r--r-- 1 weiyang 2025_paris   992 Nov  9 14:14 Makefile
--rwxr-xr-x 1 weiyang 2025_paris 32760 Nov 10 17:49 minishell
-drwxr-xr-x 9 weiyang 2025_paris    95 Nov  9 19:09 src
-drwxr-xr-x 2 weiyang 2025_paris    27 Nov  3 11:27 .vscode
--rw-r--r-- 1 weiyang 2025_paris     0 Nov 10 17:56 wc
+hello
