@@ -171,6 +171,7 @@ int exec_ast(ast *n)
     case NODE_SEQUENCE:
         exec_ast(n->left);
         return exec_ast(n->right);
+
     case NODE_BACKGROUND:
     {
         pid_t pid = fork();
@@ -179,16 +180,36 @@ int exec_ast(ast *n)
             perror("fork for bg");
             return 1;
         }
+
         if (pid == 0)
         {
-            // 在子进程里执行左子树，并忽略 SIGINT 等
+            // === 子进程逻辑 ===
+
+            // 1️⃣ 脱离父进程组 —— 否则仍是前台组
+            setpgid(0, 0);
+
+            // 2️⃣ 忽略 Ctrl+C / Ctrl+\ 信号（后台不应被中断）
+            signal(SIGINT, SIG_IGN);
+            signal(SIGQUIT, SIG_IGN);
+
+            // 3️⃣ 执行后台命令（左子树）
             exec_ast(n->left);
             exit(0);
         }
         else
         {
-            // 父进程不等待
-            exec_ast(n->right);
+            // === 父进程逻辑 ===
+
+            // 4️⃣ 打印后台任务提示（可选）
+            printf("[bg pid %d]\n", pid);
+
+            // 5️⃣ 不等待后台进程
+            // 6️⃣ 继续执行右子树（前台命令）
+            if (n->right)
+                exec_ast(n->right);
+
+            // 7️⃣ 返回前台控制权
+            tcsetpgrp(STDIN_FILENO, getpgrp());
             return 0;
         }
     }
