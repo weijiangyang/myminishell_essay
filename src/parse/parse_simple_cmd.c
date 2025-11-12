@@ -80,7 +80,7 @@ static void *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
         return (free(node), NULL);
 
     // 检查第一个 token 是否是命令名
-    if (!pt || pt->tokentype != TOK_WORD)
+    if (!pt || (pt-> tokentype))
         return (fprintf(stderr, "Syntax error: expected command name\n"), free_ast(node), NULL);
 
     // 保存命令名
@@ -98,17 +98,7 @@ static void *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
 
     // argv 数组以 NULL 结尾，方便执行阶段使用 execvp 等
     node->argv[argc] = NULL;
-    // 👇 这里添加对 & 的检测
-    pt = peek_token(cur);
-    if (pt && pt->tokentype == TOK_AMP) // 假设 & 的类型是 TOK_AMP
-    {
-        consume_token(cur);      // 消费掉 &
-        node->is_background = 1; // 标记为后台命令
-    }
-    else
-    {
-        node->is_background = 0; // 默认前台
-    }
+
     return (node);
 }
 

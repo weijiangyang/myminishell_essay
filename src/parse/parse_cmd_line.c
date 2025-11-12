@@ -35,7 +35,7 @@ ast *parse_cmdline(t_lexer **cur)
     t_lexer *pt;   // 用于检查当前 token
 
     // 调用下一级解析函数，解析由 AND/OR/Pipeline/Command 组成的语句结构
-    root = parse_and_or(cur);
+    root = parse_list(cur);
     if (!root)
         // 若解析失败（例如语法错误或内存分配失败），直接返回 NULL
         return NULL;

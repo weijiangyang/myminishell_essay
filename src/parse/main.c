@@ -47,7 +47,7 @@ char *read_complete_line(void)
     char *line = NULL;
     char *next = NULL;
 
-    line = readline("minishell$ >");
+    line = readline("minishell$  ");
     while (has_unclosed_quotes(line))
     {
         next = readline("> "); // 二级提示符

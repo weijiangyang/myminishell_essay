@@ -19,7 +19,9 @@ typedef enum
     NODE_PIPE,
     NODE_AND,
     NODE_OR,
-    NODE_SUBSHELL
+    NODE_SUBSHELL,
+    NODE_BACKGROUND,
+    NODE_SEQUENCE,
 } node_type;
 
 typedef struct s_ast
@@ -68,5 +70,6 @@ ast *parse_pipeline(t_lexer **cur);
 void process_redir(t_lexer *redir, t_lexer *file, ast *node);
 ast *parse_pre_redir(t_lexer **cur, ast *node);
 ast *parse_subshell(t_lexer **cur, ast *node);
+ast *parse_list(t_lexer **cur);
 
 #endif

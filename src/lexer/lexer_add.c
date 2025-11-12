@@ -72,9 +72,9 @@ t_lexer	*new_node(t_token_info *info, tok_type tokentype)
 	if (tokentype == TOK_HEREDOC)
 		new->str = ft_strdup("<<");
 	if (tokentype == TOK_REDIR_IN)
-		new->str = ft_strdup(">");
-	if (tokentype == TOK_REDIR_OUT)
 		new->str = ft_strdup("<");
+	if (tokentype == TOK_REDIR_OUT)
+		new->str = ft_strdup(">");
 	if (tokentype == TOK_AMP)
 		new->str = ft_strdup("&");
 	if (tokentype == TOK_LPAREN)

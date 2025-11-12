@@ -12,29 +12,29 @@
 
 #include "../../include/minishell.h"
 
-/*  
+/*
 ** parse_and_or_1
 ** ----------------
 ** 递归解析包含逻辑运算符 `&&` 与 `||` 的命令结构。
-**  
+**
 ** 示例：
 **   cmd1 && cmd2 || cmd3
-**  
+**
 ** 语法规则：
 **   and_or : pipeline ( (&& | ||) pipeline )*
-**  
+**
 ** 参数：
 **   - cur  : 当前 token 的游标（指向当前词法单元的指针）
 **   - left : 已经解析好的左侧 AST 节点指针（例如第一个 pipeline）
-**  
+**
 ** 返回值：
 **   - 完整的 and/or 语法树根节点（即左侧节点）
 */
 static ast *parse_and_or_1(t_lexer **cur, ast **left)
 {
-    t_lexer *op;   // 保存当前操作符 token（&& 或 ||）
-    ast *right;    // 保存右侧命令的 AST
-    ast *node;     // 新建一个父节点，连接左右子树
+    t_lexer *op; // 保存当前操作符 token（&& 或 ||）
+    ast *right;  // 保存右侧命令的 AST
+    ast *node;   // 新建一个父节点，连接左右子树
 
     // 当下一个 token 是 && 或 || 时，继续构建复合语句
     while (peek_token(cur) &&
@@ -73,22 +73,22 @@ static ast *parse_and_or_1(t_lexer **cur, ast **left)
     return (*left);
 }
 
-/*  
+/*
 ** parse_and_or
 ** ----------------
 ** 解析以 `&&` 或 `||` 连接的命令序列。
-**  
+**
 ** 它首先解析一个 pipeline（命令或管道链），
 ** 然后调用 parse_and_or_1() 解析后续的逻辑操作。
-**  
+**
 ** 示例：
 **   cmd1 && cmd2 || cmd3
-**  
+**
 ** 参数：
 **   - cur : 当前 token 的游标指针（传入后会被移动）
-**  
+**
 ** 返回值：
-**   - 构建完成的 AST 树根节点（可能是 NODE_AND / NODE_OR / NODE_PIPE / NODE_CMD）
+**   - 构建完成的 AST 树根节点（可能是 NODE_BACKGROUND / NODE_SEMI /NODE_AND / NODE_OR / NODE_PIPE / NODE_CMD）
 */
 ast *parse_and_or(t_lexer **cur)
 {
@@ -103,5 +103,25 @@ ast *parse_and_or(t_lexer **cur)
     parse_and_or_1(cur, &left);
 
     // 返回整个 and/or 语法树的根节点
+    return left;
+}
+
+ast *parse_list(t_lexer **cur)
+{
+    ast *left = parse_and_or(cur);
+    if (!left) return NULL;
+
+    while (peek_token(cur) &&
+           (peek_token(cur)->tokentype == TOK_SEMI ||
+            peek_token(cur)->tokentype == TOK_AMP))
+    {
+        t_lexer *op = consume_token(cur);
+        ast *node = calloc(1, sizeof(ast));
+        node->type = (op->tokentype == TOK_AMP) ? NODE_BACKGROUND : NODE_SEQUENCE;
+        node->left = left;
+        node->right = parse_list(cur);
+        left = node;
+    }
+
     return left;
 }
