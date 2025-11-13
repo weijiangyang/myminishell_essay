@@ -20,6 +20,7 @@ typedef struct s_minishell t_minishell;
 #include "../src/parse/parse.h"
 #include "../src/exec/exec.h"
 
+
 extern volatile sig_atomic_t g_signal;
 
 typedef struct s_minishell

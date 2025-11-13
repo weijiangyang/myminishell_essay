@@ -11,6 +11,7 @@ CFLAGS = -Wall -Wextra -Werror -I$(INCDIR) -I$(LIBFTDIR)
 
 # 查找所有源文件
 SRC = $(shell find $(SRCDIR) -type f -name "*.c")
+SRC += main.c
 
 # 将 src/*.c 转换为 build/*.o
 OBJ = $(patsubst $(SRCDIR)/%.c,$(BUILD)/%.o,$(SRC))

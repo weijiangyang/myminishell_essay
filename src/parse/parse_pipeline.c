@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
 
 /*
 ** parse_pipeline_1
@@ -51,7 +52,7 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes)
             return (free_ast(*left), NULL);
 
         // 为新的 PIPE 节点分配内存
-        node = calloc(1, sizeof(ast));
+        node = ft_calloc(1, sizeof(ast));
         if (!node)
             // 内存分配失败，释放左右子树防止内存泄漏
             return (free_ast(*left), free_ast(right), NULL);

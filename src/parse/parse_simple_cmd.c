@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
 
 /*
 ** parse_cmd_argv
@@ -75,7 +76,7 @@ static void *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
     t_lexer *t;
 
     // 分配 argv 数组
-    node->argv = calloc(argv_cap, sizeof(char *));
+    node->argv = ft_calloc(argv_cap, sizeof(char *));
     if (!node->argv)
         return (free(node), NULL);
 
@@ -146,7 +147,7 @@ ast *parse_simple_cmd(t_lexer **cur)
     t_lexer *pt;
 
     pt = peek_token(cur);          // 查看当前 token
-    node = calloc(1, sizeof(ast)); // 分配 AST 节点
+    node = ft_calloc(1, sizeof(ast)); // 分配 AST 节点
     if (!node)
         return (NULL);
     // 如果是左括号，则解析为子 shell

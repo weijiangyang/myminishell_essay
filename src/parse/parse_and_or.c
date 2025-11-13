@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
 
 /*
 ** parse_and_or_1
@@ -50,7 +51,7 @@ static ast *parse_and_or_1(t_lexer **cur, ast **left)
             return (free_ast(*left), NULL);
 
         // 分配一个新的 AST 节点，用于表示该 && / || 结构
-        node = calloc(1, sizeof(ast));
+        node = ft_calloc(1, sizeof(ast));
         if (!node)
             // 分配失败则释放左右子树，避免内存泄漏
             return (free_ast(*left), free_ast(right), NULL);

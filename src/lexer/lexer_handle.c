@@ -16,7 +16,7 @@
 // 作用：跳过从 `i` 开始的连续空白。
 // 参数：命令串、起点。
 
-
+volatile sig_atomic_t g_signal = 0;
 int	skip_spaces(char *str, int i)
 {
 	int	j;

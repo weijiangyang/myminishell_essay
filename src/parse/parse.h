@@ -71,5 +71,8 @@ void process_redir(t_lexer *redir, t_lexer *file, ast *node);
 ast *parse_pre_redir(t_lexer **cur, ast *node);
 ast *parse_subshell(t_lexer **cur, ast *node);
 ast *parse_list(t_lexer **cur);
+int has_unclosed_quotes(const char *s);
+char *ft_strjoin_free(char *s1, char *s2, int mode1, int mode2);
+char *read_complete_line(void);
 
 #endif
