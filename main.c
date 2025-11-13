@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
         add_history(buf); // 保存历史
 
-        general = calloc(1, sizeof(t_minishell));
+        general = ft_calloc(1, sizeof(t_minishell));
         if (!general)
         {
             perror("calloc");
