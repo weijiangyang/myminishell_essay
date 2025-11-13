@@ -1,0 +1,9 @@
+total 56
+drwxr-xr-x 6 weiyang 2025_paris    56 Nov 13 14:58 build
+drwxr-xr-x 2 weiyang 2025_paris    25 Nov 13 14:29 include
+drwxr-xr-x 2 weiyang 2025_paris  4096 Nov 13 14:58 libft
+-rw-r--r-- 1 weiyang 2025_paris  2471 Nov 13 14:44 main.c
+-rw-r--r-- 1 weiyang 2025_paris  1006 Nov 13 14:29 Makefile
+-rwxr-xr-x 1 weiyang 2025_paris 37432 Nov 13 14:58 minishell
+drwxr-xr-x 9 weiyang 2025_paris    95 Nov 13 14:29 src
+-rw-r--r-- 1 weiyang 2025_paris     0 Nov 13 14:58 wc
