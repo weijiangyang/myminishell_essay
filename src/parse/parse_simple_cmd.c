@@ -28,104 +28,136 @@
 **   - 成功：返回更新后的 node
 **   - 失败：分配失败时释放 node 并返回 NULL
 */
+/*
+ * parse_cmd_argv - returns node on success, NULL on error (do not use node after NULL)
+ */
 static ast *parse_cmd_argv(t_lexer **cur, ast *node, size_t *argv_cap, size_t *argc)
 {
-    t_lexer *t; // 当前参数 token
-    char **tmp; // 临时用于 realloc 的数组指针
+    t_lexer *t;
+    char **tmp;
+    char *s;
 
-    t = consume_token(cur); // 取出参数 token
+    if (!cur || !*cur || !node || !argv_cap || !argc)
+        return NULL;
 
-    // 如果 argv 数组已满，则动态扩容
+    t = consume_token(cur);
+    if (!t)
+        return NULL;
+
+    /* expand argv if needed */
     if (*argc + 1 >= *argv_cap)
     {
-        *argv_cap *= 2;
-        tmp = realloc(node->argv, *argv_cap * sizeof(char *));
+        size_t newcap = (*argv_cap) * 2;
+        tmp = realloc(node->argv, newcap * sizeof(char *));
         if (!tmp)
         {
             fprintf(stderr, "realloc failed\n");
-            free_ast(node); // 内存释放
             return NULL;
         }
         node->argv = tmp;
+        *argv_cap = newcap;
     }
 
-    // 复制参数字符串到 argv 数组
-    node->argv[*argc] = strdup(t->str);
+    s = safe_strdup(t->str);
+    if (!s)
+        return (NULL);
+    node->argv[*argc] = s;
     (*argc)++;
-    return (node);
+    return node;
 }
-
 /*
-** parse_normal_cmd_redir
-** ----------------
-** 解析普通命令（非子 shell）的参数和重定向。
-**
-** 参数：
-**   - cur : token 游标
-**   - node: 当前命令 AST 节点
-**   - pt  : 当前 token（通常是命令名 token）
-**
-** 返回：
-**   - 成功：返回填充好 argv 和重定向的 node
-**   - 失败：打印错误信息并释放节点
-*/
-static void *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
+ * parse_normal_cmd_redir - now returns ast* on success or NULL on error.
+ * Caller must free node on error.
+ */
+static ast *parse_normal_cmd_redir(t_lexer **cur, ast *node, t_lexer *pt)
 {
-    size_t argv_cap = 8; // 初始 argv 容量
-    size_t argc = 0;     // 当前参数数量
+    size_t argv_cap = 8;
+    size_t argc = 0;
     t_lexer *t;
 
-    // 分配 argv 数组
+    if (!cur || !node)
+        return NULL;
+
     node->argv = ft_calloc(argv_cap, sizeof(char *));
     if (!node->argv)
-        return (free(node), NULL);
-
-    // 检查第一个 token 是否是命令名
-    if (!pt || (pt-> tokentype))
-        return (fprintf(stderr, "Syntax error: expected command name\n"), free_ast(node), NULL);
-
-    // 保存命令名
-    t = consume_token(cur);
-    node->argv[argc++] = strdup(t->str);
-
-    // 解析后续 token：可能是参数或重定向
-    while ((pt = peek_token(cur)) && (pt->tokentype == TOK_WORD || is_redir_token(pt)))
     {
-        if (pt->tokentype == TOK_WORD)
-            parse_cmd_argv(cur, node, &argv_cap, &argc); // 添加参数
-        else
-            parse_pre_redir(cur, node); // 处理重定向
+        fprintf(stderr, "calloc failed\n");
+        return NULL;
     }
 
-    // argv 数组以 NULL 结尾，方便执行阶段使用 execvp 等
-    node->argv[argc] = NULL;
+    /* pt should be a WORD (command name) */
+    if (!pt || (pt->tokentype != TOK_WORD))
+    {
+        fprintf(stderr, "Syntax error: expected command name\n");
+        return NULL;
+    }
 
-    return (node);
+    /* consume command name */
+    t = consume_token(cur);
+    if (!t)
+        return NULL;
+    node->argv[argc] = safe_strdup(t->str);
+    argc++;
+    if (!node->argv[argc - 1])
+        return NULL;
+    /* parse subsequent tokens */
+    while ((pt = peek_token(cur)) != NULL)
+    {
+        if (pt->tokentype == TOK_WORD)
+        {
+            if (!parse_cmd_argv(cur, node, &argv_cap, &argc))
+                return (NULL);
+        }
+        else if (is_redir_token(pt))
+        {
+            if (!parse_pre_redir(cur, node))
+                return NULL;
+        }
+        else
+            break;
+    }
+    /* NULL-terminate argv */
+    if (argc >= argv_cap)
+    {
+        /* ensure space for NULL */
+        char **tmp = realloc(node->argv, (argv_cap + 1) * sizeof(char *));
+        if (!tmp)
+            return NULL;
+        node->argv = tmp;
+        argv_cap++;
+    }
+    node->argv[argc] = NULL;
+    return node;
 }
 
 /*
-** parse_normal_cmd
-** ----------------
-** 解析普通命令（非子 shell），包括重定向和参数。
-**
-** 参数：
-**   - cur : token 游标
-**   - node: 当前命令 AST 节点（已分配内存）
-**
-** 返回：
-**   - 完整的命令 AST 节点
-*/
+ * parse_normal_cmd - protect against NULL peek_token and propagate errors
+ */
 static ast *parse_normal_cmd(t_lexer **cur, ast *node)
 {
     t_lexer *pt;
 
-    node->type = NODE_CMD; // 设置节点类型为普通命令
-    // 处理前置重定向（命令前可能有 < input 等）
-    while ((pt = peek_token(cur)) && is_redir_token(pt))
-        parse_pre_redir(cur, node);
-    // 处理命令名和后续参数及重定向
-    parse_normal_cmd_redir(cur, node, pt);
-    return (node);
+    if (!cur || !node)
+        return NULL;
+
+    node->type = NODE_CMD;
+
+    /* leading redirections */
+    while ((pt = peek_token(cur)) != NULL && is_redir_token(pt))
+    {
+        if (!parse_pre_redir(cur, node))
+        {
+            /* syntax error: caller should free node */
+            return NULL;
+        }
+    }
+
+    pt = peek_token(cur);
+    if (!pt || pt->tokentype == TOK_END)
+        return (node); /* input finished. treat as empty command (allowed if redirection present) */
+    /* parse command name + args + mid redirs */
+    node = parse_normal_cmd_redir(cur, node, pt);
+    return node; /* may be NULL on error */
 }
 /*
 ** parse_simple_cmd
@@ -146,7 +178,7 @@ ast *parse_simple_cmd(t_lexer **cur)
     ast *node;
     t_lexer *pt;
 
-    pt = peek_token(cur);          // 查看当前 token
+    pt = peek_token(cur);             // 查看当前 token
     node = ft_calloc(1, sizeof(ast)); // 分配 AST 节点
     if (!node)
         return (NULL);

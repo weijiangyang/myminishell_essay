@@ -30,38 +30,46 @@
 **   - 若节点中已存在同类型重定向，先释放旧的字符串再保存新值。
 **   - strdup() 分配新内存，因此之后在 free_ast_cmd() 中必须释放。
 */
-void process_redir(t_lexer *redir, t_lexer *file, ast *node)
+int process_redir(t_lexer *redir, t_lexer *file, ast *node)
 {
+    char *tmp;
+
+    if (!redir || !file || !node)
+        return -1;
+
+    tmp = safe_strdup(file->str);
+    if (!tmp)
+        return -1;
+
     switch (redir->tokentype)
     {
     case TOK_REDIR_IN:
-        // 输入重定向 "< filename"
         free(node->redir_in);
-        node->redir_in = strdup(file->str);
+        node->redir_in = tmp;
         break;
 
     case TOK_REDIR_OUT:
-        // 输出重定向 "> filename"
         free(node->redir_out);
-        node->redir_out = strdup(file->str);
+        node->redir_out = tmp;
         break;
 
     case TOK_APPEND:
-        // 追加输出重定向 ">> filename"
         free(node->redir_append);
-        node->redir_append = strdup(file->str);
+        node->redir_append = tmp;
         break;
 
     case TOK_HEREDOC:
-        // heredoc 输入 "<<" delimiter
         free(node->heredoc_delim);
-        node->heredoc_delim = strdup(file->str);
+        node->heredoc_delim = tmp;
         break;
 
     default:
-        // 非法或未知类型（理论上不应发生）
-        break;
+        /* unknown token, free tmp and treat as error */
+        free(tmp);
+        return -1;
     }
+
+    return 0;
 }
 
 /*
@@ -80,28 +88,38 @@ void process_redir(t_lexer *redir, t_lexer *file, ast *node)
 **   - 成功：返回更新后的 node
 **   - 失败：打印错误信息并释放节点，返回 NULL
 */
+/*
+ * parse_pre_redir - do NOT free(node) inside this function.
+ * On error, return NULL; caller must free node.
+ */
 ast *parse_pre_redir(t_lexer **cur, ast *node)
 {
-    t_lexer *redir; // 保存重定向操作符 token
-    t_lexer *file;  // 保存重定向目标文件名 token
+    t_lexer *redir;
+    t_lexer *file;
 
-    // 取出当前的重定向操作符（例如 '<' 或 '>'）
+    if (!cur || !*cur || !node)
+        return NULL;
+
     redir = consume_token(cur);
-
-    // 下一个 token 必须是文件名（TOK_WORD）
-    file = expect_token(TOK_WORD, cur);
-    if (!file)
+    if (!redir)
     {
-        // 若没有文件名（例如用户输入 "> |"），说明语法错误
-        fprintf(stderr, "Syntax error: expected filename after redirection\n");
-
-        // 释放当前命令节点，避免内存泄漏
-        free_ast(node);
+        fprintf(stderr, "internal parser error: missing redir token\n");
         return NULL;
     }
 
-    // 将重定向信息填入 AST 节点
-    process_redir(redir, file, node);
+    file = expect_token(TOK_WORD, cur);
+    if (!file)
+    {
+        /* syntax error: leave freeing to caller */
+        fprintf(stderr, "Syntax error: expected filename after redirection\n");
+        return NULL;
+    }
 
-    return (node);
+    if (process_redir(redir, file, node) < 0)
+    {
+        fprintf(stderr, "internal error: failed to process redirection\n");
+        return NULL;
+    }
+
+    return node;
 }

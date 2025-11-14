@@ -42,7 +42,6 @@ typedef struct s_ast
     int is_background; // 1 表示后台执行
 } ast;
 
-
 ast *parse_simple_cmd(t_lexer **cur);
 ast *parse_pipeline(t_lexer **cur);
 ast *parse_and_or(t_lexer **cur);
@@ -67,12 +66,10 @@ ast *parse_cmdline(t_lexer **cur);
 int main(int argc, char *argv[]);
 ast *parse_and_or(t_lexer **cur);
 ast *parse_pipeline(t_lexer **cur);
-void process_redir(t_lexer *redir, t_lexer *file, ast *node);
+int process_redir(t_lexer *redir, t_lexer *file, ast *node);
 ast *parse_pre_redir(t_lexer **cur, ast *node);
 ast *parse_subshell(t_lexer **cur, ast *node);
 ast *parse_list(t_lexer **cur);
-int has_unclosed_quotes(const char *s);
-char *ft_strjoin_free(char *s1, char *s2, int mode1, int mode2);
-char *read_complete_line(void);
+char *safe_strdup(const char *s);
 
 #endif

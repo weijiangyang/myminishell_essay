@@ -72,37 +72,35 @@ void print_indent(int depth)
 */
 void print_ast_by_type(ast *node, int depth)
 {
-    switch (node->type)
-    {
-    case NODE_CMD:
-        print_ast_cmd(node); // 打印命令及参数
-        break;
-    case NODE_PIPE:
-        print_ast_pipe(node, depth); // 打印管道及左右子节点
-        break;
-    case NODE_AND:
-        print_ast_and(node, depth); // 打印逻辑与节点
-        break;
-    case NODE_OR:
-        print_ast_or(node, depth); // 打印逻辑或节点
-        break;
-    case NODE_SUBSHELL:
-        print_ast_subshell(node, depth); // 打印子 shell 节点
-        break;
-    case NODE_SEQUENCE:
-        printf("SEQUENCE\n");
-        print_ast(node->left, depth + 2);
-        if (node->right)
-            print_ast(node->right, depth + 2);
-        break;
-    case NODE_BACKGROUND:
-        printf("BACKGROUND\n");
-        print_ast(node->left, depth + 2);
-        if (node->right)
-            print_ast(node->right, depth + 2);
-        break;
-    default:
-        printf("Unknown AST node type %d\n", node->type);
-        return; // **不要继续访问 left/right**
-    }
+    /*===== printing: safe dispatcher =====*/
+   
+    
+        if (!node)
+        {
+            printf("%*s(EMPTY)\n", depth * 2, "");
+            return;
+        }
+
+        switch (node->type)
+        {
+        case NODE_CMD:
+            print_ast_cmd(node);
+            break;
+        case NODE_PIPE:
+            print_ast_pipe(node, depth);
+            break;
+        case NODE_AND:
+            print_ast_and(node, depth);
+            break;
+        case NODE_OR:
+            print_ast_or(node, depth);
+            break;
+        case NODE_SUBSHELL:
+            print_ast_subshell(node, depth);
+            break;
+        default:
+            printf("%*sUnknown AST node type %d\n", depth * 2, "", node->type);
+            break;
+        }
+    
 }

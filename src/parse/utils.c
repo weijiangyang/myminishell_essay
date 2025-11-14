@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
 
 /*
 ** peek_token
@@ -101,4 +102,32 @@ int is_redir_token(t_lexer *pt)
         return 1;
     else
         return 0;
+}
+
+/*
+** safe_strdup
+** ----------------
+** 对 strdup() 的安全封装。
+**
+** 功能：
+**   - 如果传入 NULL，则直接返回 NULL（避免对 NULL 调用 strdup）。
+**   - 对 strdup() 的返回值进行检查：
+**       - 若成功，返回新分配的字符串副本。
+**       - 若分配失败，打印错误信息并返回 NULL。
+**
+** 使用场景：
+**   - 解析命令、参数、重定向时复制 token->str。
+**   - 避免 strdup 失败导致后续对 NULL 指针的非法访问。
+**
+** 返回：
+**   - 成功：新分配的字符串（调用者负责 free）
+**   - 失败或输入为 NULL：返回 NULL
+*/
+char *safe_strdup(const char *s)
+{
+    if (!s) return NULL;
+    char *p = ft_strdup(s);
+    if (!p)
+        fprintf(stderr, "memory error: strdup failed\n");
+    return p;
 }
