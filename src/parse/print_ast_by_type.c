@@ -12,31 +12,40 @@
 
 #include "../../include/minishell.h"
 
-/*
-** print_ast_cmd
-** ----------------
-** 打印普通命令节点 (NODE_CMD) 的信息，包括：
-**   - 命令名和参数 (argv)
-**   - 输入重定向 (<)
-**   - 输出重定向 (>, >>)
-**   - heredoc (<<)
-**
-** 参数：
-**   - node : 指向 AST 命令节点
-*/
+/**
+ * print_ast_cmd
+ * ----------------
+ * 目的：
+ *   打印普通命令节点 (NODE_CMD) 的详细信息，
+ *   包括命令名、参数以及各种重定向。
+ *
+ * 参数：
+ *   - node : 指向 AST 命令节点
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 行为说明：
+ *   1. 打印节点类型 "CMD"
+ *   2. 遍历 argv 数组，依次打印命令名和参数
+ *   3. 打印可能存在的重定向信息：
+ *        - 输入重定向 (<)
+ *        - 输出重定向 (>)
+ *        - 追加重定向 (>>)
+ *        - heredoc (<<)
+ *   4. 换行结束
+ */
 void print_ast_cmd(ast *node)
 {
-    size_t i = 0;
+    size_t i;
 
-    printf("CMD"); // 打印节点类型
-
-    // 打印命令及其参数
+    i = 0;
+    printf("CMD");
     while (node->argv && node->argv[i])
     {
         printf(" \"%s\"", node->argv[i]);
         i++;
     }
-    // 打印可能存在的重定向
     if (node->redir_in)
         printf(" < %s", node->redir_in);
     if (node->redir_out)
@@ -45,79 +54,54 @@ void print_ast_cmd(ast *node)
         printf(" >> %s", node->redir_append);
     if (node->heredoc_delim)
         printf(" << %s", node->heredoc_delim);
-    if (node->is_background)
-        printf("&");
-
-    printf("\n"); // 换行
+    printf("\n");
 }
 
-/*
-** print_ast_pipe
-** ----------------
-** 打印管道节点 (NODE_PIPE)。
-** 递归打印左子树和右子树，并增加缩进表示层级。
-**
-** 参数：
-**   - node  : 当前 PIPE 节点
-**   - depth : 当前树深度，用于缩进显示
-*/
+/**
+ * print_ast_pipe
+ * ----------------
+ * 目的：
+ *   打印管道节点 (NODE_PIPE) 的信息，并递归打印左右子节点。
+ *
+ * 参数：
+ *   - node  : 指向 AST PIPE 节点
+ *   - depth : 当前树深度，用于格式化输出（可用于缩进显示）
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 行为说明：
+ *   1. 打印节点类型 "PIPE"
+ *   2. 递归打印左子节点（depth + 1）
+ *   3. 递归打印右子节点（depth + 1）
+ */
 void print_ast_pipe(ast *node, int depth)
 {
     printf("PIPE\n");
-    print_ast(node->left, depth + 1);  // 打印左子树
-    print_ast(node->right, depth + 1); // 打印右子树
-}
-
-/*
-** print_ast_and
-** ----------------
-** 打印逻辑与节点 (NODE_AND)。
-** 递归打印左右子树。
-**
-** 参数：
-**   - node  : 当前 AND 节点
-**   - depth : 当前树深度
-*/
-void print_ast_and(ast *node, int depth)
-{
-    printf("AND\n");
-    print_ast(node->left, depth + 1);
+    print_ast(node->left, depth + 1); 
     print_ast(node->right, depth + 1);
 }
 
-/*
-** print_ast_or
-** ----------------
-** 打印逻辑或节点 (NODE_OR)。
-** 递归打印左右子树。
-**
-** 参数：
-**   - node  : 当前 OR 节点
-**   - depth : 当前树深度
-*/
-void print_ast_or(ast *node, int depth)
-{
-    printf("OR\n");
-    print_ast(node->left, depth + 1);
-    print_ast(node->right, depth + 1);
-}
-
-/*
-** print_ast_subshell
-** ----------------
-** 打印子 shell 节点 (NODE_SUBSHELL)。
-** 递归打印子 shell 内部的 AST。
-**
-** 参数：
-**   - node  : 当前 SUBSHELL 节点
-**   - depth : 当前树深度
-*/
+/**
+ * print_ast_subshell
+ * ----------------
+ * 目的：
+ *   打印子 shell 节点 (NODE_SUBSHELL) 的信息，
+ *   并递归打印其内部的 AST。
+ *
+ * 参数：
+ *   - node  : 指向 AST SUBSHELL 节点
+ *   - depth : 当前树深度，用于格式化输出（可用于缩进显示）
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 行为说明：
+ *   1. 打印节点类型 "SUBSHELL"
+ *   2. 递归打印子 shell 内部 AST，深度加 1
+ */
 void print_ast_subshell(ast *node, int depth)
 {
     printf("SUBSHELL\n");
     print_ast(node->sub, depth + 1);
 }
-
-
-
-

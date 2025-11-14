@@ -30,7 +30,7 @@ int	skip_spaces(char *str, int i)
 // 作用：处理中断：若处于 SIGINT 状态，清空已构建的词法链表并返回“被打断”。
 // 参数：链表头地址。
 // 逻辑：检测全局信号（你项目）；如触发→`clear_list(list)`→复位→返回 1，否则 0。
-static int	check_sigint(t_lexer **list)
+/*static int	check_sigint(t_lexer **list)
 {
 	if (g_signal == SIGINT)
 	{
@@ -39,7 +39,7 @@ static int	check_sigint(t_lexer **list)
 		return (1);
 	}
 	return (0);
-}
+}*/
 
 // 作用：对 `general->args` 执行整行词法拆分。
 // 参数：全局上下文（含输入字符串 `args` 与输出链表 `lexer`）。
@@ -61,8 +61,8 @@ int	handle_lexer(t_minishell *general)
 	i = 0;
 	while (general->raw_line[i])
 	{
-		if (check_sigint(&general->lexer))
-			return (0);
+		/*if (check_sigint(&general->lexer))
+			return (0);*/
 		i += skip_spaces(general->raw_line, i);
 		if (general->raw_line[i] == '\0')
 			break ;

@@ -46,14 +46,12 @@ ast *parse_simple_cmd(t_lexer **cur);
 ast *parse_pipeline(t_lexer **cur);
 ast *parse_and_or(t_lexer **cur);
 ast *parse_cmdline(t_lexer **cur);
-
 void free_ast(ast *node);
 void free_tokens(t_lexer *tok);
 t_lexer *peek_token(t_lexer **cur);
 t_lexer *consume_token(t_lexer **cur);
 t_lexer *expect_token(tok_type type, t_lexer **cur);
 int is_redir_token(t_lexer *pt);
-
 void print_indent(int depth);
 void print_ast(ast *node, int depth);
 void print_ast_by_type(ast *node, int depth);

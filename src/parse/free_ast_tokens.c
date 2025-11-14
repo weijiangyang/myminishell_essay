@@ -12,86 +12,103 @@
 
 #include "../../include/minishell.h"
 
-/*  
-** 释放命令节点（NODE_CMD）内部资源的函数  
-** 主要负责释放 argv 数组以及所有重定向字符串  
-*/
+/**
+ * free_ast_cmd
+ * ----------------
+ * 目的：
+ *   释放普通命令节点 (NODE_CMD) 中所有动态分配的内存，
+ *   包括 argv 数组及各类重定向字符串。
+ *
+ * 参数：
+ *   - node : 指向要释放的命令 AST 节点（不释放 node 本身）
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ */
 static void free_ast_cmd(ast *node)
 {
-    int i = 0;
+    int i;
 
+    i = 0;
     if (node->argv)
-    {
-        // 逐个释放命令参数字符串
+    {  
         while (node->argv[i])
         {
             free(node->argv[i]);
             i++;
-        }
-        // 最后释放存放指针数组本身
+        }     
         free(node->argv);
-    }
-
-    // 释放命令节点中可能存在的重定向字符串
-    free(node->redir_in);       // 输入重定向（<）
-    free(node->redir_out);      // 输出重定向（>）
-    free(node->redir_append);   // 追加输出重定向（>>）
-    free(node->heredoc_delim);  // heredoc 定界符（<<）
+    } 
+    free(node->redir_in);  
+    free(node->redir_out);   
+    free(node->redir_append); 
+    free(node->heredoc_delim);
 }
+/**
+ * free_ast
+ * ----------------
+ * 目的：
+ *   递归释放 AST（抽象语法树）节点及其所有子节点的动态内存。
+ *   根据节点类型分别处理：
+ *     - NODE_CMD：释放命令节点的 argv 和重定向字段
+ *     - NODE_PIPE：递归释放左右子树
+ *     - NODE_SUBSHELL：递归释放子 shell 的内部 AST
+ *
+ * 参数：
+ *   - node : 指向要释放的 AST 节点指针（允许为 NULL）
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 注意：
+ *   - 最后会 free(node) 自身。
+ */
 
-/*  
-** 递归释放整个抽象语法树（AST）的函数  
-** 根据节点类型选择不同的释放逻辑  
-*/
 void free_ast(ast *node)
 {
     if (!node)
-        return; // 空节点直接返回
-
-    switch (node->type)
+        return;
+    if (node->type == NODE_CMD)
+        free_ast_cmd(node);
+    else if (node->type == NODE_PIPE)
     {
-        case NODE_CMD:
-            // 普通命令节点：释放命令参数和重定向信息
-            free_ast_cmd(node);
-            break;
-
-        case NODE_PIPE:
-        case NODE_AND:
-        case NODE_OR:
-            // 二元操作节点（管道、逻辑与、逻辑或）：
-            // 递归释放左右子树
-            free_ast(node->left);
-            free_ast(node->right);
-            break;
-
-        case NODE_SUBSHELL:
-            // 子 shell 节点：递归释放内部子 AST
-            free_ast(node->sub);
-            break;
-
-        default:
-            // 其他未知类型（保险措施）
-            break;
+        free_ast(node->left);
+        free_ast(node->right);
     }
-
-    // 最后释放当前节点本身
+    else if (node->type == NODE_SUBSHELL)
+        free_ast(node);
     free(node);
 }
 
-/*  
-** 释放词法分析（lexer）阶段生成的 token 链表  
-** 每个 t_lexer 节点包含字符串内容和 next 指针  
-*/
+/**
+ * free_tokens
+ * ----------------
+ * 目的：
+ *   释放词法分析阶段生成的 token 链表，
+ *   包括每个 token 的字符串字段和节点自身。
+ *
+ * 参数：
+ *   - tok : 指向 token 链表头部的指针（允许为 NULL）
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 行为说明：
+ *   - 逐个遍历链表节点
+ *   - 先释放 token->str（如果存在）
+ *   - 再释放 token 节点本身
+ *   - 最终释放整个链表
+ */
 void free_tokens(t_lexer *tok)
 {
     while (tok)
     {
-        t_lexer *nx = tok->next; // 保存下一个节点指针，避免 free 后丢失
+        t_lexer *nx = tok->next; 
 
         if (tok->str)
-            free(tok->str);      // 释放当前 token 的字符串内容
+            free(tok->str); 
 
-        free(tok);               // 释放当前 token 结构体本身
-        tok = nx;                // 移动到下一个 token
+        free(tok); 
+        tok = nx; 
     }
 }

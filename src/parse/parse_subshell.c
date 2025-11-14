@@ -12,44 +12,37 @@
 
 #include "../../include/minishell.h"
 
-/*
-** parse_subshell
-** ----------------
-** 解析子 shell 命令，即被圆括号包围的命令：
-**   ( command )
-**
-** 子 shell 会在 AST 中生成一个 NODE_SUBSHELL 节点，
-** 它的子节点 (sub) 指向括号内解析出的命令 AST。
-**
-** 参数：
-**   - cur  : 当前 token 游标指针
-**   - node : 已分配好的 AST 节点，用于存放子 shell 信息
-**
-** 返回：
-**   - 成功：返回包含子 shell 的 AST 节点
-**   - 失败：语法错误或内存释放后返回 NULL
-*/
+/**
+ * parse_subshell
+ * ----------------
+ * 目的：
+ *   解析子 shell 表达式，即括号内的命令，并返回对应的 AST 节点。
+ *
+ * 参数：
+ *   - cur  : 指向当前 token 游标的指针
+ *   - node : 已分配的 AST 节点，用于存储子 shell 信息
+ *
+ * 返回值：
+ *   - 成功：返回填充好的 NODE_SUBSHELL AST 节点
+ *   - 失败：返回 NULL（语法错误或缺少右括号），并释放节点
+ *
+ * 行为说明：
+ *   1. 消耗左括号 '(' token
+ *   2. 将节点类型设置为 NODE_SUBSHELL
+ *   3. 调用 parse_pipeline 解析括号内的命令序列
+ *   4. 检查右括号 ')' 是否存在，若缺失打印语法错误并释放节点
+ *   5. 返回子 shell AST 节点
+ */
 ast *parse_subshell(t_lexer **cur, ast *node)
 {
-    // 消耗左括号 '(' token
     consume_token(cur);
-
-    // 设置节点类型为子 shell
     node->type = NODE_SUBSHELL;
-
-    // 解析括号内的命令（支持 AND/OR 和管道等复杂结构）
-    node->sub = parse_and_or(cur);
-
-    // 期望右括号 ')'，否则语法错误
+    node->sub = parse_pipeline(cur);
     if (!expect_token(TOK_RPAREN, cur))
     {
         fprintf(stderr, "Syntax error: expected ')'\n");
-
-        // 释放子 shell 节点及其子树，防止内存泄漏
         free_ast(node);
         return NULL;
     }
-
-    // 返回完整的子 shell AST 节点
     return node;
 }
