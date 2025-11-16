@@ -11,46 +11,117 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
+
+/**
+ * ft_lstadd_back_1
+ * ----------------
+ * 目的：
+ *   将一个 t_redir 类型的新节点追加到重定向链表的末尾。
+ *
+ * 参数：
+ *   - lst : 指向 t_redir 链表头指针的指针
+ *   - new : 指向要追加的新节点
+ *
+ * 返回值：
+ *   - void : 无返回值，链表头可能会被修改（如果原链表为空）
+ *
+ * 行为说明：
+ *   1. 检查 lst 和 new 是否为 NULL，若为 NULL 则直接返回
+ *   2. 如果链表为空（*lst 为 NULL），直接将 *lst 指向 new
+ *   3. 如果链表不为空：
+ *      a. 遍历链表找到最后一个节点
+ *      b. 将最后一个节点的 next 指针指向 new，从而追加节点
+ */
+static void	ft_lstadd_back_1(t_redir **lst, t_redir *new)
+{
+	t_redir	*last;
+
+	if (!lst || !new)
+		return ;
+	if (*lst == NULL)
+	{
+		*lst = new;
+		return ;
+	}
+	last = *lst;
+	while (last->next)
+		last = last->next;
+	last->next = new;
+}
+
+/**
+ * ft_lstnew_1
+ * ----------------
+ * 目的：
+ *   创建一个新的 t_redir 链表节点，将 content 作为节点的数据，并初始化 next 为 NULL。
+ *
+ * 参数：
+ *   - content : 要存储在节点中的内容，一般是指向文件名的指针
+ *
+ * 返回值：
+ *   - t_redir* : 新创建的节点指针
+ *   - NULL     : 内存分配失败
+ *
+ * 行为说明：
+ *   1. 使用 malloc 为 t_redir 结构分配内存
+ *   2. 检查分配是否成功，如果失败返回 NULL
+ *   3. 将 content 赋值给新节点的 filename 字段
+ *   4. 将 next 初始化为 NULL
+ *   5. 返回新节点指针
+ */
+static t_redir	*ft_lstnew_1(void *content)
+{
+	t_redir	*new_node;
+
+	new_node = (t_redir *)malloc(sizeof(t_redir));
+	if (!new_node)
+		return (NULL);
+	new_node->filename = content;
+	new_node->next = NULL;
+	return (new_node);
+}
 
 /**
  * process_redir_1
  * ----------------
  * 目的：
- *   根据重定向类型，将临时字符串 tmp 分配给 AST 命令节点
- *   的对应重定向字段，并释放旧的值。
+ *   将单个重定向（输入/输出/追加/HEREDOC）加入到 AST 命令节点对应的重定向链表或字段中。
  *
  * 参数：
  *   - type : 重定向类型（TOK_REDIR_IN, TOK_REDIR_OUT, TOK_APPEND, TOK_HEREDOC）
  *   - node : 指向 AST 命令节点
- *   - tmp  : 已分配的字符串，表示重定向目标（由调用者提供）
+ *   - tmp  : 重定向目标文件名字符串（或 HEREDOC 分隔符），由调用者分配
  *
  * 返回值：
- *   - 0  : 成功设置重定向
- *   - -1 : 未知或非法重定向类型，tmp 被释放
+ *   - 0  : 成功处理重定向
+ *   - -1 : 参数非法或重定向类型未知，释放 tmp 后返回
  *
  * 行为说明：
- *   1. 根据 type 判断是输入、输出、追加还是 heredoc 重定向
- *   2. 释放节点中已有的同类型字符串（避免内存泄漏）
- *   3. 将 tmp 赋值给节点对应的重定向字段
- *   4. 若 type 不合法，释放 tmp 并返回 -1
+ *   1. 调用 ft_lstnew_1 创建一个 t_redir 节点，将 tmp 作为 filename
+ *   2. 根据重定向类型，将新节点追加到 AST 对应链表：
+ *        - TOK_REDIR_IN   -> node->redir_in
+ *        - TOK_REDIR_OUT  -> node->redir_out
+ *        - TOK_APPEND     -> node->redir_append
+ *   3. 如果是 HEREDOC（TOK_HEREDOC）：
+ *        - 释放 node->heredoc_delim 原来的值
+ *        - 将 tmp 直接赋给 node->heredoc_delim
+ *   4. 如果重定向类型不支持：
+ *        - 释放 tmp
+ *        - 返回 -1
+ *   5. 成功处理完成后返回 0
  */
 int process_redir_1(tok_type type, ast *node, char *tmp)
 {
+    t_redir *tmp_redir;
+
+    tmp_redir = ft_lstnew_1(tmp);
     if (type == TOK_REDIR_IN)
-    {
-        free(node->redir_in);
-        node->redir_in = tmp;
-    }
+        ft_lstadd_back_1(&node->redir_in, tmp_redir);
     else if (type == TOK_REDIR_OUT)
-    {
-        free(node->redir_out);
-        node->redir_out = tmp;
-    }
+        ft_lstadd_back_1(&node->redir_out, tmp_redir);
     else if (type == TOK_APPEND)
-    {
-        free(node->redir_append);
-        node->redir_append = tmp;
-    }
+        ft_lstadd_back_1(&node->redir_append, tmp_redir);
     else if (type == TOK_HEREDOC)
     {
         free(node->heredoc_delim);

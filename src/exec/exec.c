@@ -29,39 +29,55 @@ static int exec_cmd_node(ast *n)
     }
     if (pid == 0)
     {
+        
         // 子进程：设置重定向
         if (n->redir_in)
         {
-            int fd = open(n->redir_in, O_RDONLY);
-            if (fd < 0)
+            t_redir *tmp = n->redir_in;
+            while (tmp)
             {
-                perror("open redir_in");
-                exit(1);
+                int fd = open(tmp->filename, O_RDONLY);
+                if (fd < 0)
+                {
+                    perror("open redir_in");
+                    exit(1);
+                }
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+                tmp = tmp->next;
             }
-            dup2(fd, STDIN_FILENO);
-            close(fd);
         }
         if (n->redir_out)
         {
-            int fd = open(n->redir_out, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-            if (fd < 0)
+            t_redir *tmp = n->redir_out;
+            while (tmp)
             {
-                perror("open redir_out");
-                exit(1);
+                int fd = open(tmp->filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                if (fd < 0)
+                {
+                    perror("open redir_out");
+                    exit(1);
+                }
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+                tmp = tmp->next;
             }
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
         }
         if (n->redir_append)
         {
-            int fd = open(n->redir_append, O_WRONLY | O_CREAT | O_APPEND, 0666);
-            if (fd < 0)
+            t_redir *tmp = n->redir_append;
+            while (tmp)
             {
-                perror("open redir_append");
-                exit(1);
+                int fd = open(tmp->filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
+                if (fd < 0)
+                {
+                    perror("open redir_append");
+                    exit(1);
+                }
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+                tmp = tmp->next;
             }
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
         }
         // HEREDOC 暂时不完全支持 — 你可以把 node->heredoc_delim 当作临时文件名处理
 

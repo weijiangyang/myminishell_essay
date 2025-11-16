@@ -35,6 +35,15 @@
  *        - heredoc (<<)
  *   4. 换行结束
  */
+void print_list_redir(t_redir *redir)
+{
+    while (redir)
+    {
+        printf("%s ", redir->filename);
+        redir = redir->next;
+    }
+}
+
 void print_ast_cmd(ast *node)
 {
     size_t i;
@@ -47,11 +56,11 @@ void print_ast_cmd(ast *node)
         i++;
     }
     if (node->redir_in)
-        printf(" < %s", node->redir_in);
+        print_list_redir(node->redir_in);
     if (node->redir_out)
-        printf(" > %s", node->redir_out);
+        print_list_redir(node->redir_out);
     if (node->redir_append)
-        printf(" >> %s", node->redir_append);
+        print_list_redir(node->redir_append);
     if (node->heredoc_delim)
         printf(" << %s", node->heredoc_delim);
     printf("\n");
@@ -78,7 +87,7 @@ void print_ast_cmd(ast *node)
 void print_ast_pipe(ast *node, int depth)
 {
     printf("PIPE\n");
-    print_ast(node->left, depth + 1); 
+    print_ast(node->left, depth + 1);
     print_ast(node->right, depth + 1);
 }
 
