@@ -62,7 +62,7 @@ void print_ast_cmd(ast *node)
     if (node->redir_append)
         print_list_redir(node->redir_append);
     if (node->heredoc_delim)
-        printf(" << %s", node->heredoc_delim);
+        printf(" << %s", node->heredoc_delim->delim);
     printf("\n");
 }
 

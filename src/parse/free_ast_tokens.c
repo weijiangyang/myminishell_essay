@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
+
 
 /**
  * free_ast_cmd
@@ -31,17 +33,17 @@ static void free_ast_cmd(ast *node)
 
     i = 0;
     if (node->argv)
-    {  
+    {
         while (node->argv[i])
         {
             free(node->argv[i]);
             i++;
-        }     
+        }
         free(node->argv);
-    } 
-    free(node->redir_in);  
-    free(node->redir_out);   
-    free(node->redir_append); 
+    }
+    free(node->redir_in);
+    free(node->redir_out);
+    free(node->redir_append);
     free(node->heredoc_delim);
 }
 /**
@@ -103,12 +105,13 @@ void free_tokens(t_lexer *tok)
 {
     while (tok)
     {
-        t_lexer *nx = tok->next; 
+        t_lexer *nx = tok->next;
 
         if (tok->str)
-            free(tok->str); 
+            free(tok->str);
 
-        free(tok); 
-        tok = nx; 
+        free(tok);
+        tok = nx;
     }
 }
+

@@ -1,5 +1,49 @@
 #include "../../include/minishell.h"
 
+int apply_heredoc(t_heredoc *heredocs)
+{
+    int pipefd[2];
+
+    if (!heredocs)
+        return 0;
+
+    while (heredocs)
+    {
+        if (pipe(pipefd) < 0)
+        {
+            perror("pipe");
+            return -1;
+        }
+
+        while (1)
+        {
+            write(1, "heredoc> ", 9);
+            char buf[1024];
+            ssize_t n = read(0, buf, sizeof(buf));
+
+            if (n <= 0)
+                break;
+
+            buf[n - 1] = '\0';
+
+            // delimiter?
+            if (strcmp(buf, heredocs->delim) == 0)
+                break;
+
+            write(pipefd[1], buf, strlen(buf));
+            write(pipefd[1], "\n", 1);
+        }
+
+        close(pipefd[1]); // write end closed
+        dup2(pipefd[0], STDIN_FILENO);
+        close(pipefd[0]);
+
+        heredocs = heredocs->next;
+    }
+    return 0;
+}
+
+
 // 执行命令节点（fork + exec 或内建）
 static int exec_cmd_node(ast *n)
 {
@@ -29,7 +73,7 @@ static int exec_cmd_node(ast *n)
     }
     if (pid == 0)
     {
-        
+
         // 子进程：设置重定向
         if (n->redir_in)
         {
@@ -79,8 +123,13 @@ static int exec_cmd_node(ast *n)
                 tmp = tmp->next;
             }
         }
-        // HEREDOC 暂时不完全支持 — 你可以把 node->heredoc_delim 当作临时文件名处理
+        if (n->heredoc_delim)
+        {
+            if (apply_heredoc(n->heredoc_delim) < 0)
+                exit(1);
+        }
 
+       
         execvp(n->argv[0], n->argv);
         perror("execvp");
         exit(1);

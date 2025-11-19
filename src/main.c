@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "include/minishell.h"
-#include "libft/libft.h"
+#include "../include/minishell.h"
+#include "../libft/libft.h"
 
 /**
  * has_unclosed_quotes

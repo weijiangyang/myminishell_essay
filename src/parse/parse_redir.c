@@ -125,7 +125,7 @@ int process_redir_1(tok_type type, ast *node, char *tmp)
     else if (type == TOK_HEREDOC)
     {
         free(node->heredoc_delim);
-        node->heredoc_delim = tmp;
+        node->heredoc_delim->delim = tmp;
     }
     else
         return (free(tmp), -1);
