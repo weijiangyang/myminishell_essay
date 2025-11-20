@@ -1,49 +1,5 @@
 #include "../../include/minishell.h"
 
-int apply_heredoc(t_redir *heredoc)
-{
-    int pipefd[2];
-    int stdin_backup = dup(STDIN_FILENO);
-
-    int last_fd = -1;
-
-    while (heredoc)
-    {
-        dup2(stdin_backup, STDIN_FILENO);
-        pipe(pipefd);
-
-        while (1)
-        {
-            write(2, "heredoc> ", 9);  // prompt 不写入 pipe
-            char buf[1024];
-            ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
-            if (n <= 0)
-                break;
-            buf[n-1] = '\0';
-            if (strcmp(buf, heredoc->delim) == 0)
-                break;
-
-            write(pipefd[1], buf, strlen(buf));
-            write(pipefd[1], "\n", 1);
-        }
-
-        close(pipefd[1]);           // 写端关闭，保证读端能读 EOF
-        if (last_fd != -1)
-            close(last_fd);         // 关闭上一次 pipe
-        last_fd = pipefd[0];        // 保存读端，供命令 stdin 使用
-
-        heredoc = heredoc->next;
-    }
-
-    // 最后一个 heredoc pipe 作为 stdin
-    if (last_fd != -1)
-        dup2(last_fd, STDIN_FILENO);
-
-    close(stdin_backup);
-
-    return 0;
-}
-
 // 执行命令节点（fork + exec 或内建）
 static int exec_cmd_node(ast *n)
 {
@@ -74,57 +30,59 @@ static int exec_cmd_node(ast *n)
     if (pid == 0)
     {
 
-        // 子进程：设置重定向
-        if (n->redir_in)
+        t_redir *r = n->redir;
+        while (r)
         {
-            t_redir *tmp = n->redir_in;
-            while (tmp)
+            int fd;
+            switch (r->type)
             {
-                int fd = open(tmp->filename, O_RDONLY);
+            case REDIR_INPUT:
+                fd = open(r->filename, O_RDONLY);
                 if (fd < 0)
                 {
-                    perror("open redir_in");
+                    perror("open input");
                     exit(1);
                 }
                 dup2(fd, STDIN_FILENO);
                 close(fd);
-                tmp = tmp->next;
-            }
-        }
-        if (n->redir_out)
-        {
-            t_redir *tmp = n->redir_out;
-            while (tmp)
-            {
-                int fd = open(tmp->filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                break;
+            case REDIR_OUTPUT:
+                fd = open(r->filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
                 if (fd < 0)
                 {
-                    perror("open redir_out");
+                    perror("open output");
                     exit(1);
                 }
                 dup2(fd, STDOUT_FILENO);
                 close(fd);
-                tmp = tmp->next;
-            }
-        }
-        if (n->redir_append)
-        {
-            t_redir *tmp = n->redir_append;
-            while (tmp)
-            {
-                int fd = open(tmp->filename, O_WRONLY | O_CREAT | O_APPEND, 0666);
+                break;
+            case REDIR_APPEND:
+                fd = open(r->filename, O_CREAT | O_WRONLY | O_APPEND, 0666);
                 if (fd < 0)
                 {
-                    perror("open redir_append");
+                    perror("open append");
                     exit(1);
                 }
                 dup2(fd, STDOUT_FILENO);
                 close(fd);
-                tmp = tmp->next;
+                break;
+            case HEREDOC:
+                // r->heredoc_fd 是你之前 pipe 的读端
+                if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
+                {
+                    perror("dup2 heredoc");
+                    exit(1);
+                }
+                // 不要忘了关闭原来的 fd
+                close(r->heredoc_fd);
+                break;
+            default:
+                // 未知类型
+                break;
             }
+            r = r->next;
         }
-        if (n->heredoc_delim)
-            apply_heredoc(n->heredoc_delim);
+
         execvp(n->argv[0], n->argv);
         perror("execvp");
         exit(1);

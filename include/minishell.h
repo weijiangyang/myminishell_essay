@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 typedef struct s_minishell t_minishell;
 

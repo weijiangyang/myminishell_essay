@@ -211,6 +211,6 @@ int main(int argc, char *argv[])
         free(buf);
         free(general);
     }
-    rl_clear_history();
+    clear_history();
     return 0;
 }

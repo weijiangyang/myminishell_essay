@@ -41,10 +41,13 @@ static void free_ast_cmd(ast *node)
         }
         free(node->argv);
     }
-    free(node->redir_in);
-    free(node->redir_out);
-    free(node->redir_append);
-    free(node->heredoc_delim);
+    t_redir *tmp = node->redir;
+    while (tmp)
+    {
+        free(tmp->filename);
+        tmp = tmp->next;
+    }
+    free(node->redir);
 }
 /**
  * free_ast

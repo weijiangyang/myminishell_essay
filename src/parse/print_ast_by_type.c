@@ -35,18 +35,25 @@
  *        - heredoc (<<)
  *   4. 换行结束
  */
+const char *redir_type_to_string(t_redir_type type)
+{
+    switch (type) {
+        case REDIR_INPUT:    return "REDIR_INPUT";
+        case REDIR_OUTPUT:   return "REDIR_OUTPUT";
+        case REDIR_APPEND:   return "REDIR_APPEND";
+        case HEREDOC:  return "HEREDOC";
+        // 如果还有别的 type，就继续写 case
+        default:              return "UNKNOWN_REDIR_TYPE";
+    }
+}
+
 void print_list_redir(t_redir *redir)
 {
     while (redir)
     {
-        if (redir->type == TOK_REDIR_IN)
-            printf(" redir_in: %s ", redir->filename);
-        else if (redir->type == TOK_REDIR_OUT)
-            printf(" redir_out: %s ", redir->filename);
-        else if (redir->type == TOK_APPEND)
-            printf(" redir_append : %s ", redir->filename);
-        else if (redir->type == TOK_HEREDOC)
-            printf(" heredoc : %s ", redir->delim);
+       const char *type_str = redir_type_to_string(redir->type);
+        printf(" %s : %s ", type_str, redir->filename);
+        
         redir = redir->next;
     }
 }
@@ -62,14 +69,9 @@ void print_ast_cmd(ast *node)
         printf(" \"%s\"", node->argv[i]);
         i++;
     }
-    if (node->redir_in)
-        print_list_redir(node->redir_in);
-    if (node->redir_out)
-        print_list_redir(node->redir_out);
-    if (node->redir_append)
-        print_list_redir(node->redir_append);
-    if (node->heredoc_delim)
-        print_list_redir(node->heredoc_delim);
+    
+    print_list_redir(node->redir);
+    
     printf("\n");
 }
 

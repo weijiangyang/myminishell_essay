@@ -74,21 +74,19 @@ static t_redir *ft_lstnew_1(void *content, tok_type type)
 {
     t_redir *new_node;
 
-    new_node = (t_redir *)malloc(sizeof(t_redir));
+    new_node = ft_calloc(sizeof(t_redir), 1);
     if (!new_node)
         return (NULL);
-    if (type == TOK_REDIR_IN || type == TOK_REDIR_OUT || type == TOK_APPEND)
-    {
-        new_node->filename = content;
-        new_node->type = type;
-    }
-        
+    new_node->filename = content;
+    if (type == TOK_REDIR_IN)
+        new_node->type = REDIR_INPUT;
+    else if (type == TOK_REDIR_OUT)
+        new_node->type = REDIR_OUTPUT;
+    else if (type == TOK_APPEND)
+        new_node->type = REDIR_APPEND;
     else if (type == TOK_HEREDOC)
-    {
-        new_node->delim = content;
-        new_node->type = type;
-    }
-        
+        new_node->type = HEREDOC;
+    
     new_node->next = NULL;
     return (new_node);
 }
@@ -127,17 +125,10 @@ int process_redir_1(tok_type type, ast *node, char *tmp)
     t_redir *tmp_redir;
 
     tmp_redir = ft_lstnew_1(tmp, type);
-    if (type == TOK_REDIR_IN)
-        ft_lstadd_back_1(&node->redir_in, tmp_redir);
-    else if (type == TOK_REDIR_OUT)
-        ft_lstadd_back_1(&node->redir_out, tmp_redir);
-    else if (type == TOK_APPEND)
-        ft_lstadd_back_1(&node->redir_append, tmp_redir);
-    else if (type == TOK_HEREDOC)
-        ft_lstadd_back_1(&node->heredoc_delim, tmp_redir);
+    if (type == TOK_REDIR_IN || type == TOK_REDIR_OUT || type == TOK_APPEND || type == TOK_HEREDOC)
+        return (ft_lstadd_back_1(&node->redir, tmp_redir), 0);
     else
         return (free(tmp), -1);
-    return (0);
 }
 
 /**
