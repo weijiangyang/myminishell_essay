@@ -24,17 +24,15 @@ typedef enum
     NODE_SEQUENCE,
 } node_type;
 
+
 typedef struct s_redir
 {
     char *filename;
+    char *delim;
     struct s_redir *next;
+    tok_type type;
 } t_redir;
 
-typedef struct s_heredoc
-{
-    char *delim;
-    struct s_heredoc *next;
-} t_heredoc;
 typedef struct s_ast
 {
     node_type type;
@@ -43,7 +41,7 @@ typedef struct s_ast
     t_redir *redir_in;
     t_redir *redir_out;
     t_redir *redir_append;
-    t_heredoc *heredoc_delim;
+    t_redir *heredoc_delim;
     int n_pipes;
     // 当为组合节点时
     struct s_ast *left;

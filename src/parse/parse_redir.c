@@ -33,21 +33,21 @@
  *      a. 遍历链表找到最后一个节点
  *      b. 将最后一个节点的 next 指针指向 new，从而追加节点
  */
-static void	ft_lstadd_back_1(t_redir **lst, t_redir *new)
+static void ft_lstadd_back_1(t_redir **lst, t_redir *new)
 {
-	t_redir	*last;
+    t_redir *last;
 
-	if (!lst || !new)
-		return ;
-	if (*lst == NULL)
-	{
-		*lst = new;
-		return ;
-	}
-	last = *lst;
-	while (last->next)
-		last = last->next;
-	last->next = new;
+    if (!lst || !new)
+        return;
+    if (*lst == NULL)
+    {
+        *lst = new;
+        return;
+    }
+    last = *lst;
+    while (last->next)
+        last = last->next;
+    last->next = new;
 }
 
 /**
@@ -70,16 +70,27 @@ static void	ft_lstadd_back_1(t_redir **lst, t_redir *new)
  *   4. 将 next 初始化为 NULL
  *   5. 返回新节点指针
  */
-static t_redir	*ft_lstnew_1(void *content)
+static t_redir *ft_lstnew_1(void *content, tok_type type)
 {
-	t_redir	*new_node;
+    t_redir *new_node;
 
-	new_node = (t_redir *)malloc(sizeof(t_redir));
-	if (!new_node)
-		return (NULL);
-	new_node->filename = content;
-	new_node->next = NULL;
-	return (new_node);
+    new_node = (t_redir *)malloc(sizeof(t_redir));
+    if (!new_node)
+        return (NULL);
+    if (type == TOK_REDIR_IN || type == TOK_REDIR_OUT || type == TOK_APPEND)
+    {
+        new_node->filename = content;
+        new_node->type = type;
+    }
+        
+    else if (type == TOK_HEREDOC)
+    {
+        new_node->delim = content;
+        new_node->type = type;
+    }
+        
+    new_node->next = NULL;
+    return (new_node);
 }
 
 /**
@@ -115,7 +126,7 @@ int process_redir_1(tok_type type, ast *node, char *tmp)
 {
     t_redir *tmp_redir;
 
-    tmp_redir = ft_lstnew_1(tmp);
+    tmp_redir = ft_lstnew_1(tmp, type);
     if (type == TOK_REDIR_IN)
         ft_lstadd_back_1(&node->redir_in, tmp_redir);
     else if (type == TOK_REDIR_OUT)
@@ -123,10 +134,7 @@ int process_redir_1(tok_type type, ast *node, char *tmp)
     else if (type == TOK_APPEND)
         ft_lstadd_back_1(&node->redir_append, tmp_redir);
     else if (type == TOK_HEREDOC)
-    {
-        free(node->heredoc_delim);
-        node->heredoc_delim->delim = tmp;
-    }
+        ft_lstadd_back_1(&node->heredoc_delim, tmp_redir);
     else
         return (free(tmp), -1);
     return (0);

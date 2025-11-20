@@ -39,7 +39,14 @@ void print_list_redir(t_redir *redir)
 {
     while (redir)
     {
-        printf("%s ", redir->filename);
+        if (redir->type == TOK_REDIR_IN)
+            printf(" redir_in: %s ", redir->filename);
+        else if (redir->type == TOK_REDIR_OUT)
+            printf(" redir_out: %s ", redir->filename);
+        else if (redir->type == TOK_APPEND)
+            printf(" redir_append : %s ", redir->filename);
+        else if (redir->type == TOK_HEREDOC)
+            printf(" heredoc : %s ", redir->delim);
         redir = redir->next;
     }
 }
@@ -62,7 +69,7 @@ void print_ast_cmd(ast *node)
     if (node->redir_append)
         print_list_redir(node->redir_append);
     if (node->heredoc_delim)
-        printf(" << %s", node->heredoc_delim->delim);
+        print_list_redir(node->heredoc_delim);
     printf("\n");
 }
 

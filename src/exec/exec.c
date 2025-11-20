@@ -1,48 +1,48 @@
 #include "../../include/minishell.h"
 
-int apply_heredoc(t_heredoc *heredocs)
+int apply_heredoc(t_redir *heredoc)
 {
     int pipefd[2];
+    int stdin_backup = dup(STDIN_FILENO);
 
-    if (!heredocs)
-        return 0;
+    int last_fd = -1;
 
-    while (heredocs)
+    while (heredoc)
     {
-        if (pipe(pipefd) < 0)
-        {
-            perror("pipe");
-            return -1;
-        }
+        dup2(stdin_backup, STDIN_FILENO);
+        pipe(pipefd);
 
         while (1)
         {
-            write(1, "heredoc> ", 9);
+            write(2, "heredoc> ", 9);  // prompt 不写入 pipe
             char buf[1024];
-            ssize_t n = read(0, buf, sizeof(buf));
-
+            ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
             if (n <= 0)
                 break;
-
-            buf[n - 1] = '\0';
-
-            // delimiter?
-            if (strcmp(buf, heredocs->delim) == 0)
+            buf[n-1] = '\0';
+            if (strcmp(buf, heredoc->delim) == 0)
                 break;
 
             write(pipefd[1], buf, strlen(buf));
             write(pipefd[1], "\n", 1);
         }
 
-        close(pipefd[1]); // write end closed
-        dup2(pipefd[0], STDIN_FILENO);
-        close(pipefd[0]);
+        close(pipefd[1]);           // 写端关闭，保证读端能读 EOF
+        if (last_fd != -1)
+            close(last_fd);         // 关闭上一次 pipe
+        last_fd = pipefd[0];        // 保存读端，供命令 stdin 使用
 
-        heredocs = heredocs->next;
+        heredoc = heredoc->next;
     }
+
+    // 最后一个 heredoc pipe 作为 stdin
+    if (last_fd != -1)
+        dup2(last_fd, STDIN_FILENO);
+
+    close(stdin_backup);
+
     return 0;
 }
-
 
 // 执行命令节点（fork + exec 或内建）
 static int exec_cmd_node(ast *n)
@@ -124,12 +124,7 @@ static int exec_cmd_node(ast *n)
             }
         }
         if (n->heredoc_delim)
-        {
-            if (apply_heredoc(n->heredoc_delim) < 0)
-                exit(1);
-        }
-
-       
+            apply_heredoc(n->heredoc_delim);
         execvp(n->argv[0], n->argv);
         perror("execvp");
         exit(1);
