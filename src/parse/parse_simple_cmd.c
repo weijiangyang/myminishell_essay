@@ -36,7 +36,7 @@
  *   3. 使用 safe_strdup 复制 token 字符串，添加到 argv[*argc]
  *   4. 更新 argc
  */
-static ast *parse_cmd_argv(t_lexer **cur, ast *node, size_t *argv_cap, size_t *argc)
+/*static ast *parse_cmd_argv(t_lexer **cur, ast *node, size_t *argv_cap, size_t *argc)
 {
     t_lexer *t;
     char **tmp;
@@ -61,7 +61,7 @@ static ast *parse_cmd_argv(t_lexer **cur, ast *node, size_t *argv_cap, size_t *a
     node->argv[*argc] = s;
     (*argc)++;
     return node;
-}
+}*/
 
 /**
  * parse_normal_cmd_redir_1
@@ -87,7 +87,7 @@ static ast *parse_cmd_argv(t_lexer **cur, ast *node, size_t *argv_cap, size_t *a
  *        - 否则退出循环
  *   2. 循环结束后，argv[*argc] 设置为 NULL，方便 execvp 调用
  */
-static ast *parse_normal_cmd_redir_1(t_lexer **cur, ast *node, size_t *argv_cap, size_t *argc)
+/*static ast *parse_normal_cmd_redir_1(t_lexer **cur, ast *node, size_t *argv_cap, size_t *argc)
 {
     t_lexer *pt;
 
@@ -108,7 +108,7 @@ static ast *parse_normal_cmd_redir_1(t_lexer **cur, ast *node, size_t *argv_cap,
     }
     node->argv[*argc] = NULL;
     return (node);
-}
+}*/
 
 /**
  * parse_normal_cmd_redir
@@ -132,7 +132,7 @@ static ast *parse_normal_cmd_redir_1(t_lexer **cur, ast *node, size_t *argv_cap,
  *   4. 确认第一个 token 是命令名 (TOK_WORD)，否则报语法错误
  *   5. 调用 parse_normal_cmd_redir_1 解析后续参数和重定向
  */
-static ast *parse_normal_cmd_redir(t_lexer **cur, ast *node)
+/*static ast *parse_normal_cmd_redir(t_lexer **cur, ast *node)
 {
     size_t argv_cap;
     size_t argc;
@@ -149,7 +149,7 @@ static ast *parse_normal_cmd_redir(t_lexer **cur, ast *node)
     if (!pt || (pt->tokentype != TOK_WORD))
         return (fprintf(stderr, "Syntax error: expected command name\n"), NULL);
     return (parse_normal_cmd_redir_1(cur, node, &argv_cap, &argc));
-}
+}*/
 
 /**
  * parse_normal_cmd
@@ -174,7 +174,7 @@ static ast *parse_normal_cmd_redir(t_lexer **cur, ast *node)
  *        - 如果是，则返回仅包含重定向的节点
  *   5. 调用 parse_normal_cmd_redir 处理命令名、参数及可能的后续重定向
  */
-static ast *parse_normal_cmd(t_lexer **cur, ast *node)
+/*static ast *parse_normal_cmd(t_lexer **cur, ast *node)
 {
     t_lexer *pt;
 
@@ -192,7 +192,7 @@ static ast *parse_normal_cmd(t_lexer **cur, ast *node)
     node = parse_normal_cmd_redir(cur, node);
     return node;
 }
-
+*/
 /**
  * parse_simple_cmd
  * ----------------
@@ -212,7 +212,7 @@ static ast *parse_normal_cmd(t_lexer **cur, ast *node)
  *   3. 如果当前 token 是左括号 '('，调用 parse_subshell 解析子 shell
  *   4. 否则调用 parse_normal_cmd 解析普通命令
  */
-ast *parse_simple_cmd(t_lexer **cur)
+/*ast *parse_simple_cmd(t_lexer **cur)
 {
     ast *node;
     t_lexer *pt;
@@ -225,3 +225,4 @@ ast *parse_simple_cmd(t_lexer **cur)
         return (parse_subshell(cur, node));
     return (parse_normal_cmd(cur, node));
 }
+*/

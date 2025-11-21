@@ -34,11 +34,12 @@ typedef enum e_redir_type
 
 typedef struct s_redir
 {
+    struct s_redir *next;
     char *filename;
     int heredoc_fd;
     bool is_expanded;
     t_redir_type type;
-    struct s_redir *next;
+    
 } t_redir;
 
 typedef struct s_ast
@@ -83,5 +84,6 @@ ast *parse_pre_redir(t_lexer **cur, ast *node);
 ast *parse_subshell(t_lexer **cur, ast *node);
 ast *parse_list(t_lexer **cur);
 char *safe_strdup(const char *s);
+ast *parse_simple_cmd_redir_list(t_lexer **cur);
 
 #endif

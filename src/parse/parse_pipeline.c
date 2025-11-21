@@ -44,7 +44,7 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes)
         ast *node;
 
         consume_token(cur);
-        right = parse_simple_cmd(cur);
+        right = parse_simple_cmd_redir_list(cur);
         if (!right)
             return (free_ast(*left), NULL);
         node = ft_calloc(1, sizeof(ast));
@@ -84,7 +84,7 @@ ast *parse_pipeline(t_lexer **cur)
     ast *left;
     int n_pipes;
 
-    left = parse_simple_cmd(cur);
+    left = parse_simple_cmd_redir_list(cur);
     if (!left)
         return NULL;
     n_pipes = 0;

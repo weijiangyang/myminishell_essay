@@ -21,7 +21,7 @@ OBJ = $(patsubst $(SRCDIR)/%.c,$(BUILD)/%.o,$(SRC))
 all: $(LIBFT) $(NAME)
 
 $(LIBFT):
-	@make -C $(LIBFTDIR)
+	@make -C $(LIBFTDIR) bonus
 
 # 链接 minishell
 $(NAME): $(OBJ) $(LIBFT)

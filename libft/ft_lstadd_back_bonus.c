@@ -28,3 +28,24 @@ void	ft_lstadd_back(t_list **lst, t_list *new)
 		last = last->next;
 	last->next = new;
 }
+
+void ft_lstadd_back_any(void **lst, void *new_node)
+{
+    void *cur;
+
+    if (!lst || !new_node)
+        return;
+
+    if (*lst == NULL) {
+        *lst = new_node;
+        return;
+    }
+
+    cur = *lst;
+
+    // 把每个节点当成 “第一个成员是 next 的结构体”
+    while ( *(void **)cur != NULL )
+        cur = *(void **)cur;
+
+    *(void **)cur = new_node;
+}

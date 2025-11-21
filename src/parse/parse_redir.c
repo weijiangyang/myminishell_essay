@@ -70,7 +70,7 @@ static void ft_lstadd_back_1(t_redir **lst, t_redir *new)
  *   4. 将 next 初始化为 NULL
  *   5. 返回新节点指针
  */
-static t_redir *ft_lstnew_1(void *content, tok_type type)
+t_redir *ft_lstnew_1(void *content, tok_type type)
 {
     t_redir *new_node;
 

@@ -24,3 +24,16 @@ int	ft_lstsize(t_list *lst)
 	}
 	return (count);
 }
+
+int ft_lstsize_any(void *lst)
+{
+    int count = 0;
+    void *cur = lst;
+
+    while (cur)
+    {
+        cur = *(void **)cur; // next 是结构体第一个成员
+        count++;
+    }
+    return count;
+}
