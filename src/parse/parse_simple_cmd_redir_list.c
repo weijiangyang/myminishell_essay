@@ -56,7 +56,7 @@ t_redir *create_redir(tok_type type, char *content)
     new_node = ft_calloc(sizeof(t_redir), 1);
     if (!new_node)
         return (NULL);
-    new_node->filename = content;
+    new_node->filename = ft_strdup(content);
     if (type == TOK_REDIR_IN)
         new_node->type = REDIR_INPUT;
     else if (type == TOK_REDIR_OUT)
@@ -100,7 +100,6 @@ t_cmd *cmdlst_add_back(t_cmd **lst, t_cmd *new_node)
     return new_node;
 }
 
-
 static int cmdlst_size(t_cmd *lst)
 {
     int n = 0;
@@ -131,6 +130,21 @@ t_redir *redirlst_add_back(t_redir **lst, t_redir *new_node)
     return new_node;
 }
 
+static int write_heredoc(t_redir *r, const char *content)
+{
+    int pipefd[2];
+    if (pipe(pipefd) < 0)
+    {
+        perror("pipe");
+        return -1;
+    }
+
+    r->heredoc_fd = pipefd[0]; // 保存读端到 AST
+    // 写入内容到管道
+    write(pipefd[1], content, strlen(content));
+    close(pipefd[1]); // 写端关闭，让读端可以 EOF
+    return 0;
+}
 
 static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
 {
@@ -147,74 +161,57 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
     {
         if (is_redir_token(pt))
         {
-            /* 直接 consume 重定向符号并拿到 op */
             t_lexer *op = consume_token(cur);
-            if (!op)
-            {
-                free_ast_partial(node);
-                fprintf(stderr, "Internal error: consume_token returned NULL for redir op\n");
-                return NULL;
-            }
-
-            /* 直接 consume filename（比 peek+consume 更稳健）*/
             t_lexer *filetok = consume_token(cur);
-            if (!filetok || filetok->tokentype != TOK_WORD)
+            if (!op || !filetok || filetok->tokentype != TOK_WORD)
             {
                 free_ast_partial(node);
-                fprintf(stderr, "Syntax error: Missing filename after redirection\n");
                 return NULL;
             }
 
-            /* create_redir 会 strdup filename（你的实现），要检查返回值 */
             t_redir *new_redir = create_redir(op->tokentype, filetok->str);
             if (!new_redir)
             {
                 free_ast_partial(node);
-                fprintf(stderr, "Memory error: create_redir failed\n");
                 return NULL;
             }
 
-            redirlst_add_back(&redir, new_redir);
+            if (op->tokentype == TOK_HEREDOC)
+            {
+                int pipefd[2];
+                if (pipe(pipefd) < 0)
+                {
+                    perror("pipe");
+                    free(new_redir);
+                    free_ast_partial(node);
+                    return NULL;
+                }
+                t_redir *hd = create_redir(TOK_HEREDOC, filetok->str);
+                redirlst_add_back(&redir, hd);
+                write_heredoc(hd, "line1\nline2\n"); // 写入 heredoc 内容到管道
+
+                // 父进程写入内容时用 pipefd[1]，执行阶段再写
+            }
+            else
+                redirlst_add_back(&redir, new_redir);
         }
         else if (pt->tokentype == TOK_WORD)
         {
-            /* consume word 并使用返回的 token */
             t_lexer *tok = consume_token(cur);
-            if (!tok)
-            {
-                free_redir_list(redir);
-                free_ast_partial(node);
-                fprintf(stderr, "Internal error: consume_token returned NULL for word\n");
-                return NULL;
-            }
-
             t_cmd *new_argv = create_argv(tok->str);
-            if (!new_argv)
-            {
-                free_redir_list(redir);
-                free_ast_partial(node);
-                fprintf(stderr, "Memory error: create_argv failed\n");
-                return NULL;
-            }
-
             cmdlst_add_back(&argv_cmd, new_argv);
         }
         else
-        {
-            /* 遇到其他 token（如管道、分号等）时停止解析当前 simple command */
             break;
-        }
     }
 
-    /* 构建 argv 二维数组：把链表中的字符串指针搬到 argv 数组，然后释放链表节点结构（但不 free 字符串） */
     int size = cmdlst_size(argv_cmd);
     char **argvs = malloc((size + 1) * sizeof(char *));
     if (!argvs)
     {
         free_redir_list(redir);
-        free_argv_list(argv_cmd); // 此函数会 free strdup 的字符串，若你计划保留字符串请调整
+        free_argv_list(argv_cmd);
         free(node);
-        fprintf(stderr, "Memory error: malloc argv array failed\n");
         return NULL;
     }
 
@@ -222,17 +219,16 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
     t_cmd *tmp = argv_cmd;
     while (tmp && i < size)
     {
-        argvs[i++] = tmp->arg; /* 迁移字符串所有权到 argv 数组 */
+        argvs[i++] = tmp->arg;
         tmp = tmp->next;
     }
     argvs[i] = NULL;
 
-    /* 释放 argv 链表节点，但不要 free 字符串（因为已在 argvs 中） */
     tmp = argv_cmd;
     while (tmp)
     {
         t_cmd *next = tmp->next;
-        free(tmp); /* 仅释放节点结构 */
+        free(tmp);
         tmp = next;
     }
 

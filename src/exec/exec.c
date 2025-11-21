@@ -1,35 +1,23 @@
 #include "../../include/minishell.h"
 
+
+
 // 执行命令节点（fork + exec 或内建）
 static int exec_cmd_node(ast *n)
 {
-    // 处理内建命令（如 cd, exit 等）
-    if (n->argv && n->argv[0])
-    {
-        if (strcmp(n->argv[0], "cd") == 0)
-        {
-            const char *dir = n->argv[1] ? n->argv[1] : getenv("HOME");
-            if (chdir(dir) < 0)
-            {
-                perror("cd");
-                return 1;
-            }
-            return 0;
-        }
-        if (strcmp(n->argv[0], "exit") == 0)
-        {
-            exit(0);
-        }
-    }
+    if (!n || !n->argv || !n->argv[0])
+        return 1;
+
     pid_t pid = fork();
     if (pid < 0)
     {
         perror("fork");
         return 1;
     }
+
     if (pid == 0)
     {
-
+        // child
         t_redir *r = n->redir;
         while (r)
         {
@@ -38,46 +26,32 @@ static int exec_cmd_node(ast *n)
             {
             case REDIR_INPUT:
                 fd = open(r->filename, O_RDONLY);
-                if (fd < 0)
-                {
-                    perror("open input");
-                    exit(1);
-                }
+                if (fd < 0) { perror("open input"); exit(1); }
                 dup2(fd, STDIN_FILENO);
                 close(fd);
                 break;
             case REDIR_OUTPUT:
                 fd = open(r->filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
-                if (fd < 0)
-                {
-                    perror("open output");
-                    exit(1);
-                }
+                if (fd < 0) { perror("open output"); exit(1); }
                 dup2(fd, STDOUT_FILENO);
                 close(fd);
                 break;
             case REDIR_APPEND:
                 fd = open(r->filename, O_CREAT | O_WRONLY | O_APPEND, 0666);
-                if (fd < 0)
-                {
-                    perror("open append");
-                    exit(1);
-                }
+                if (fd < 0) { perror("open append"); exit(1); }
                 dup2(fd, STDOUT_FILENO);
                 close(fd);
                 break;
             case HEREDOC:
-                // r->heredoc_fd 是你之前 pipe 的读端
+                // r->heredoc_fd 已是读端
                 if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
                 {
                     perror("dup2 heredoc");
                     exit(1);
                 }
-                // 不要忘了关闭原来的 fd
                 close(r->heredoc_fd);
                 break;
             default:
-                // 未知类型
                 break;
             }
             r = r->next;
@@ -89,16 +63,12 @@ static int exec_cmd_node(ast *n)
     }
     else
     {
+        // parent
         int status = 0;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status))
-        {
             return WEXITSTATUS(status);
-        }
-        else
-        {
-            return 1;
-        }
+        return 1;
     }
 }
 
