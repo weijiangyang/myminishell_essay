@@ -10,15 +10,22 @@ typedef struct s_cmd
 static void free_redir_list(t_redir *r)
 {
     t_redir *next;
+
     while (r)
     {
         next = r->next;
-        if (r->filename)
-            free(r->filename);
+
+        if (r->type == HEREDOC && r->heredoc_fd >= 0)
+            close(r->heredoc_fd);
+
+        free(r->filename);
         free(r);
+
         r = next;
     }
 }
+
+
 
 static void free_argv_list(t_cmd *a)
 {
@@ -51,12 +58,14 @@ static void free_ast_partial(ast *node)
 
 t_redir *create_redir(tok_type type, char *content)
 {
-    t_redir *new_node;
-
-    new_node = ft_calloc(sizeof(t_redir), 1);
+    t_redir *new_node = ft_calloc(1, sizeof(t_redir));
     if (!new_node)
-        return (NULL);
+        return NULL;
+
     new_node->filename = ft_strdup(content);
+    new_node->next = NULL;
+    new_node->heredoc_fd = -1; // 明确无效值
+
     if (type == TOK_REDIR_IN)
         new_node->type = REDIR_INPUT;
     else if (type == TOK_REDIR_OUT)
@@ -66,8 +75,7 @@ t_redir *create_redir(tok_type type, char *content)
     else if (type == TOK_HEREDOC)
         new_node->type = HEREDOC;
 
-    new_node->next = NULL;
-    return (new_node);
+    return new_node;
 }
 
 t_cmd *create_argv(char *str)
@@ -130,7 +138,7 @@ t_redir *redirlst_add_back(t_redir **lst, t_redir *new_node)
     return new_node;
 }
 
-static int write_heredoc(t_redir *r, const char *content)
+/*static int write_heredoc(t_redir *r, const char *content)
 {
     int pipefd[2];
     if (pipe(pipefd) < 0)
@@ -144,7 +152,7 @@ static int write_heredoc(t_redir *r, const char *content)
     write(pipefd[1], content, strlen(content));
     close(pipefd[1]); // 写端关闭，让读端可以 EOF
     return 0;
-}
+}*/
 
 static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
 {
@@ -186,14 +194,30 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
                     free_ast_partial(node);
                     return NULL;
                 }
-                t_redir *hd = create_redir(TOK_HEREDOC, filetok->str);
-                redirlst_add_back(&redir, hd);
-                write_heredoc(hd, "line1\nline2\n"); // 写入 heredoc 内容到管道
 
-                // 父进程写入内容时用 pipefd[1]，执行阶段再写
+                while (1)
+                {
+                    char *line = readline("> ");
+                    if (!line)
+                        break;
+
+                    // 输入与 delimiter 一致 → 停止
+                    if (strcmp(line, new_redir->filename) == 0)
+                    {
+                        free(line);
+                        break;
+                    }
+
+                    write(pipefd[1], line, ft_strlen(line));
+                    write(pipefd[1], "\n", 1);
+                    free(line);
+                }
+
+                close(pipefd[1]);                  // 关闭写端
+                new_redir->heredoc_fd = pipefd[0]; // 读端留给 exec 阶段使用
             }
-            else
-                redirlst_add_back(&redir, new_redir);
+
+            redirlst_add_back(&redir, new_redir);
         }
         else if (pt->tokentype == TOK_WORD)
         {

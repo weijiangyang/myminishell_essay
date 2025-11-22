@@ -1,12 +1,144 @@
 #include "../../include/minishell.h"
+int apply_redirs(t_redir *r)
+{
+    int fd;
+    while (r)
+    {
+        if (r->type == REDIR_INPUT) // <
+        {
+            fd = open(r->filename, O_RDONLY);
+            if (fd < 0)
+            {
+                perror(r->filename);
+                return 1;
+            }
+            if (dup2(fd, STDIN_FILENO) < 0)
+            {
+                perror("dup2 infile");
+                close(fd);
+                return 1;
+            }
+            close(fd);
+        }
+        else if (r->type == REDIR_OUTPUT) // >
+        {
+            fd = open(r->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0)
+            {
+                perror(r->filename);
+                return 1;
+            }
+            if (dup2(fd, STDOUT_FILENO) < 0)
+            {
+                perror("dup2 outfile");
+                close(fd);
+                return 1;
+            }
+            close(fd);
+        }
+        else if (r->type == REDIR_APPEND) // >>
+        {
+            fd = open(r->filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd < 0)
+            {
+                perror(r->filename);
+                return 1;
+            }
+            if (dup2(fd, STDOUT_FILENO) < 0)
+            {
+                perror("dup2 append");
+                close(fd);
+                return 1;
+            }
+            close(fd);
+        }
+        else if (r->type == HEREDOC) // << (heredoc_fd 已保存为读端)
+        {
+            if (r->heredoc_fd < 0)
+            {
+                fprintf(stderr, "heredoc fd invalid\n");
+                return 1;
+            }
+            if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
+            {
+                perror("dup2 heredoc");
+                return 1;
+            }
+            close(r->heredoc_fd);
+            r->heredoc_fd = -1;
+        }
+        r = r->next;
+    }
+    return 0;
+}
 
-
+static int apply_redirs_nocmd(t_redir *r)
+{
+    
+    int fd;
+    while (r)
+    {
+        if (r->type == REDIR_OUTPUT)
+        {
+            fd = open(r->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0)
+            {
+                perror(r->filename);
+                return 1;
+            }
+            
+            close(fd);
+        }
+        else if (r->type == REDIR_APPEND)
+        {
+            fd = open(r->filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd < 0)
+            {
+                perror(r->filename);
+                return 1;
+            }
+            close(fd);
+        }
+        else if (r->type == REDIR_INPUT)
+        {
+            fd = open(r->filename, O_RDONLY);
+            if (fd < 0)
+            {
+                perror(r->filename);
+                return 1;
+            }
+            close(fd);
+        }
+        else if (r->type == HEREDOC)
+        {
+            if (r->heredoc_fd < 0)
+            {
+                fprintf(stderr, "heredoc fd invalid\n");
+                return 1;
+            }
+            if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
+            {
+                perror("dup2 heredoc");
+                return 1;
+            }
+            close(r->heredoc_fd);
+            r->heredoc_fd = -1;
+        }
+        r = r->next;
+    }
+    return 0;
+}
 
 // 执行命令节点（fork + exec 或内建）
 static int exec_cmd_node(ast *n)
 {
-    if (!n || !n->argv || !n->argv[0])
+    if (!n)
         return 1;
+
+    // 纯重定向，没有命令
+    // 纯重定向
+    if (!n->argv && n->redir)
+        return apply_redirs_nocmd(n->redir);
 
     pid_t pid = fork();
     if (pid < 0)
@@ -19,43 +151,8 @@ static int exec_cmd_node(ast *n)
     {
         // child
         t_redir *r = n->redir;
-        while (r)
-        {
-            int fd;
-            switch (r->type)
-            {
-            case REDIR_INPUT:
-                fd = open(r->filename, O_RDONLY);
-                if (fd < 0) { perror("open input"); exit(1); }
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-                break;
-            case REDIR_OUTPUT:
-                fd = open(r->filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
-                if (fd < 0) { perror("open output"); exit(1); }
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
-                break;
-            case REDIR_APPEND:
-                fd = open(r->filename, O_CREAT | O_WRONLY | O_APPEND, 0666);
-                if (fd < 0) { perror("open append"); exit(1); }
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
-                break;
-            case HEREDOC:
-                // r->heredoc_fd 已是读端
-                if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
-                {
-                    perror("dup2 heredoc");
-                    exit(1);
-                }
-                close(r->heredoc_fd);
-                break;
-            default:
-                break;
-            }
-            r = r->next;
-        }
+        if (apply_redirs(r) < 0)
+            exit(1);
 
         execvp(n->argv[0], n->argv);
         perror("execvp");
