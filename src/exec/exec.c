@@ -116,12 +116,7 @@ static int apply_redirs_nocmd(t_redir *r)
                 fprintf(stderr, "heredoc fd invalid\n");
                 return 1;
             }
-            if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
-            {
-                perror("dup2 heredoc");
-                return 1;
-            }
-            close(r->heredoc_fd);
+                        close(r->heredoc_fd);
             r->heredoc_fd = -1;
         }
         r = r->next;

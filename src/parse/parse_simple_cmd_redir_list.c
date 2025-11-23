@@ -194,7 +194,6 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
                     free_ast_partial(node);
                     return NULL;
                 }
-
                 while (1)
                 {
                     char *line = readline("> ");

@@ -41,8 +41,8 @@ typedef enum
 	TOK_OR,		   // ||
 	TOK_LPAREN,	   // (
 	TOK_RPAREN,	   // )
-	TOK_REDIR_IN,  // <
-	TOK_REDIR_OUT, // >
+	TOK_REDIR_IN,  // <(读取)
+	TOK_REDIR_OUT, // >（写出）
 	TOK_APPEND,	   // >>
 	TOK_HEREDOC,   // <<
 	TOK_END,	   // EOF
