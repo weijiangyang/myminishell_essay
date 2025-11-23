@@ -25,8 +25,6 @@ static void free_redir_list(t_redir *r)
     }
 }
 
-
-
 static void free_argv_list(t_cmd *a)
 {
     t_cmd *next;
@@ -206,16 +204,13 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
                         free(line);
                         break;
                     }
-
                     write(pipefd[1], line, ft_strlen(line));
                     write(pipefd[1], "\n", 1);
                     free(line);
                 }
-
                 close(pipefd[1]);                  // 关闭写端
                 new_redir->heredoc_fd = pipefd[0]; // 读端留给 exec 阶段使用
             }
-
             redirlst_add_back(&redir, new_redir);
         }
         else if (pt->tokentype == TOK_WORD)
@@ -227,7 +222,6 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
         else
             break;
     }
-
     int size = cmdlst_size(argv_cmd);
     char **argvs = malloc((size + 1) * sizeof(char *));
     if (!argvs)
@@ -237,7 +231,6 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
         free(node);
         return NULL;
     }
-
     int i = 0;
     t_cmd *tmp = argv_cmd;
     while (tmp && i < size)
@@ -246,7 +239,6 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
         tmp = tmp->next;
     }
     argvs[i] = NULL;
-
     tmp = argv_cmd;
     while (tmp)
     {
@@ -254,10 +246,8 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
         free(tmp);
         tmp = next;
     }
-
     node->redir = redir;
     node->argv = argvs;
-
     return node;
 }
 

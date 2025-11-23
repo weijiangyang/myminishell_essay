@@ -74,7 +74,7 @@ int apply_redirs(t_redir *r)
 
 static int apply_redirs_nocmd(t_redir *r)
 {
-    
+
     int fd;
     while (r)
     {
@@ -86,7 +86,7 @@ static int apply_redirs_nocmd(t_redir *r)
                 perror(r->filename);
                 return 1;
             }
-            
+
             close(fd);
         }
         else if (r->type == REDIR_APPEND)
@@ -116,12 +116,25 @@ static int apply_redirs_nocmd(t_redir *r)
                 fprintf(stderr, "heredoc fd invalid\n");
                 return 1;
             }
-                        close(r->heredoc_fd);
+            close(r->heredoc_fd);
             r->heredoc_fd = -1;
         }
         r = r->next;
     }
     return 0;
+}
+
+static void close_heredoc_fds(t_redir *r)
+{
+    while (r)
+    {
+        if (r->type == HEREDOC && r->heredoc_fd >= 0)
+        {
+            close(r->heredoc_fd);
+            r->heredoc_fd = -1;
+        }
+        r = r->next;
+    }
 }
 
 // 执行命令节点（fork + exec 或内建）
@@ -156,6 +169,8 @@ static int exec_cmd_node(ast *n)
     else
     {
         // parent
+        // parent should close heredoc read fds
+        close_heredoc_fds(n->redir);
         int status = 0;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status))
