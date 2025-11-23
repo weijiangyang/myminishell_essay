@@ -136,22 +136,6 @@ t_redir *redirlst_add_back(t_redir **lst, t_redir *new_node)
     return new_node;
 }
 
-/*static int write_heredoc(t_redir *r, const char *content)
-{
-    int pipefd[2];
-    if (pipe(pipefd) < 0)
-    {
-        perror("pipe");
-        return -1;
-    }
-
-    r->heredoc_fd = pipefd[0]; // 保存读端到 AST
-    // 写入内容到管道
-    write(pipefd[1], content, strlen(content));
-    close(pipefd[1]); // 写端关闭，让读端可以 EOF
-    return 0;
-}*/
-
 static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
 {
     t_lexer *pt;
@@ -194,20 +178,40 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
                 }
                 while (1)
                 {
-                    char *line = readline("> ");
-                    if (!line)
-                        break;
+                    char *line = NULL;
+                    size_t len = 0;
 
-                    // 输入与 delimiter 一致 → 停止
+                    write(1, "heredoc< ", 9);
+
+                    ssize_t nread = getline(&line, &len, stdin);
+                    if (nread <= 0)
+                    {
+                        free(line); // 修复：getline 失败时可能需要 free
+                        break;
+                    }
+                    // 确保行末有 \n（getline 通常有，但重定向或 EOF 可能没有）
+                    int has_newline = (line[nread - 1] == '\n');
+
+                    // 暂时去掉末尾的换行便于比较
+                    if (has_newline)
+                        line[nread - 1] = '\0';
+
+                    // 与 delimiter 比较
                     if (strcmp(line, new_redir->filename) == 0)
                     {
                         free(line);
                         break;
                     }
-                    write(pipefd[1], line, ft_strlen(line));
-                    write(pipefd[1], "\n", 1);
+                    // 恢复换行
+                    if (has_newline)
+                        line[nread - 1] = '\n';
+
+                    // 写入 pipe：必须写入实际读取的 nread 字节，而不是 len
+                    write(pipefd[1], line, nread);
+
                     free(line);
                 }
+
                 close(pipefd[1]);                  // 关闭写端
                 new_redir->heredoc_fd = pipefd[0]; // 读端留给 exec 阶段使用
             }
