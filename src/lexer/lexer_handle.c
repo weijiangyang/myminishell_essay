@@ -17,14 +17,12 @@
 // 参数：命令串、起点。
 
 volatile sig_atomic_t g_signal = 0;
-int	skip_spaces(char *str, int i)
+int skip_spaces(char *str, int i)
 {
-	int	j;
-
-	j = 0;
-	while (is_space(str[i + j]))
-		j++;
-	return (j);
+    int j = 0;
+    while (str[i + j] && is_space(str[i + j]))  // 确保不越界
+        j++;
+    return j;
 }
 
 // 作用：处理中断：若处于 SIGINT 状态，清空已构建的词法链表并返回“被打断”。
@@ -66,6 +64,7 @@ int	handle_lexer(t_minishell *general)
 		i += skip_spaces(general->raw_line, i);
 		if (general->raw_line[i] == '\0')
 			break ;
+		
 		if (is_token((unsigned char)general->raw_line[i]))
 			j = handle_token(general->raw_line, i, &general->lexer);
 		else

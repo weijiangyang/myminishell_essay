@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+#include "../../libft/libft.h"
 
 // 作用：从源串 `s` 的当前读指针起，拷贝**被指定引号包裹**的内容到 `res`，
 // 并维护源/目标索引 `idx`。
@@ -96,7 +97,7 @@ char	*remove_quotes_flag(const char *s, int *had_q, int *q_single,
 	}
 	if (check_and_set_flags(s, q_single, q_double) == 0)
 		return (NULL);
-	len = strlen(s);
+	len = ft_strlen(s);
 	res = malloc(len + 1);
 	if (!res)
 		return (NULL);

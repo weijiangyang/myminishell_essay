@@ -43,6 +43,8 @@ static int calc_word_len(char *str, int start_i)
 		j += q_len;
 		if (!str[start_i + j] || is_space(str[start_i + j]))
 			break;
+		else if (str[start_i + j] == 34 || str[start_i + j] == 39)
+			continue;
 		else
 			j++;
 	}
