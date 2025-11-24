@@ -87,7 +87,7 @@ static int finalize_word_node(t_token_info *info, t_lexer **list)
 	{
 		if (info->raw)
 			free(info->raw);
-		else if (info->clean)
+		if (info->clean)// 把else if 修改成if
 			free(info->clean);
 		return (-1);
 	}

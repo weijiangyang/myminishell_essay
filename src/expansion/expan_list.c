@@ -16,7 +16,7 @@
 // 做什么：从当前 node 开始，在下一个 | 之前找本段第一个 TOK_WORD，检查是否精确等于 "export"。
 // 输出：1 是 export 段 / 0 否。
 // 谁调：expander_list，用于决定本段 TOK_WORD 是否要保留引号。
-/*static int	is_export_segment(t_lexer *node)
+static int	is_export_segment(t_lexer *node)
 {
 	t_lexer	*p;
 
@@ -34,23 +34,7 @@
 		p = p->next;
 	}
 	return (0);
-}*/
-static int is_export_segment(t_lexer *node)//修改： 不需要遍历
-{
-    // 确保节点有效并且是一个单词类型的 token
-    if (node && node->tokentype == TOK_WORD && node->str && node->str[0])
-    {
-        // 检查该单词是否是 "export"
-        if (node->str[0] == 'e' && node->str[1] == 'x' && node->str[2] == 'p'
-            && node->str[3] == 'o' && node->str[4] == 'r' && node->str[5] == 't'
-            && node->str[6] == '\0')
-        {
-            return 1;  // 如果是 "export"，返回 1
-        }
-    }
-    return 0;  // 否则，返回 0
 }
-
 
 // 做什么：按管道段遍历整条链表：
 // 每段先 export_mode = is_export_segment(p)；

@@ -192,6 +192,7 @@ int main(int argc, char *argv[])
             free(general);
             continue;
         }
+        expander_list(general, general->lexer);
         // === Parser 阶段 ===
         t_lexer *cursor = general->lexer;
         ast *root = parse_cmdline(&cursor);
