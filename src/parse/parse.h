@@ -125,5 +125,10 @@ ast *parse_subshell(t_lexer **cur, ast *node);
 ast *parse_list(t_lexer **cur);
 char *safe_strdup(const char *s);
 ast *parse_simple_cmd_redir_list(t_lexer **cur);
+void free_t_cmd_node(t_cmd *argv_cmd);
+int heredoc_loop(int write_fd, const char *delimiter);
+int handle_heredoc(t_redir *new_redir);
+t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir);
+
 
 #endif
