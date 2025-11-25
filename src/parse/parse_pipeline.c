@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-#include "../../libft/libft.h"
 
 /**
  * parse_pipeline_1

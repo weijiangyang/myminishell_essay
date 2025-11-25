@@ -47,6 +47,24 @@ const char *redir_type_to_string(t_redir_type type)
     }
 }
 
+/**
+ * print_list_redir
+ * ------------------------------------------------------------
+ * 目的：
+ *   打印一个重定向链表 t_redir 的内容。
+ *
+ * 参数：
+ *   @redir — 指向重定向链表头
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 逻辑：
+ *   1. 遍历链表每个节点。
+ *   2. 根据 type 获取字符串表示（使用 redir_type_to_string）。
+ *   3. 打印类型和文件名，中间用冒号分隔。
+ *   4. 遍历至链表末尾。
+ */
 void print_list_redir(t_redir *redir)
 {
     while (redir)
@@ -58,6 +76,24 @@ void print_list_redir(t_redir *redir)
     }
 }
 
+/**
+ * print_ast_cmd
+ * ------------------------------------------------------------
+ * 目的：
+ *   打印一个 AST 命令节点的内容，包括命令参数和重定向信息。
+ *
+ * 参数：
+ *   @node — 指向 AST 节点（必须是 NODE_CMD 类型）
+ *
+ * 返回值：
+ *   - 无返回值（void）
+ *
+ * 逻辑：
+ *   1. 打印 "CMD" 开头。
+ *   2. 遍历 node->argv，依次打印每个参数，用双引号包裹。
+ *   3. 调用 print_list_redir 打印重定向链表。
+ *   4. 打印换行符结束本命令输出。
+ */
 void print_ast_cmd(ast *node)
 {
     size_t i;
