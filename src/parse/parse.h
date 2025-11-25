@@ -73,12 +73,6 @@ typedef struct s_redir
  * @field next  指向下一个 t_cmd 节点（单向链表）
  */
 typedef t_list t_cmd;
-
-/*typedef struct s_cmd
-{
-    char *arg;
-    struct s_cmd *next;
-} t_cmd;*/
 typedef struct s_ast
 {
     node_type type;
@@ -91,12 +85,9 @@ typedef struct s_ast
     struct s_ast *right;
     // 当为子shell时
     struct s_ast *sub;
-    int is_background; // 1 表示后台执行
 } ast;
 
-ast *parse_simple_cmd(t_lexer **cur);
 ast *parse_pipeline(t_lexer **cur);
-ast *parse_and_or(t_lexer **cur);
 ast *parse_cmdline(t_lexer **cur);
 void free_ast(ast *node);
 void free_tokens(t_lexer *tok);
@@ -111,24 +102,17 @@ void print_indent(int depth);
 void print_ast(ast *node, int depth);
 void print_ast_by_type(ast *node, int depth);
 void print_ast_pipe(ast *node, int depth);
-void print_ast_and(ast *node, int depth);
-void print_ast_or(ast *node, int depth);
 void print_ast_subshell(ast *node, int depth);
 void print_ast_cmd(ast *node);
 ast *parse_cmdline(t_lexer **cur);
 int main(int argc, char *argv[]);
-ast *parse_and_or(t_lexer **cur);
 ast *parse_pipeline(t_lexer **cur);
-int process_redir(t_lexer *redir, t_lexer *file, ast *node);
-ast *parse_pre_redir(t_lexer **cur, ast *node);
 ast *parse_subshell(t_lexer **cur, ast *node);
-ast *parse_list(t_lexer **cur);
 char *safe_strdup(const char *s);
 ast *parse_simple_cmd_redir_list(t_lexer **cur);
 void free_t_cmd_node(t_cmd *argv_cmd);
 int heredoc_loop(int write_fd, const char *delimiter);
 int handle_heredoc(t_redir *new_redir);
 t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir);
-
 
 #endif

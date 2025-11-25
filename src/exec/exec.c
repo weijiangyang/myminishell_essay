@@ -147,6 +147,26 @@ static int exec_cmd_node(ast *n)
     // 纯重定向
     if (!n->argv && n->redir)
         return apply_redirs_nocmd(n->redir);
+    if (is_builtin(n->argv[0]))
+    {
+        if (n->redir)
+        {
+            // 临时保存标准输入输出
+            int stdin_bak = dup(STDIN_FILENO);
+            int stdout_bak = dup(STDOUT_FILENO);
+            if (apply_redirs(n->redir) < 0)
+                return 1;
+            int rc = exec_builtin(n);
+            // 恢复标准输入输出
+            dup2(stdin_bak, STDIN_FILENO);
+            dup2(stdout_bak, STDOUT_FILENO);
+            close(stdin_bak);
+            close(stdout_bak);
+            return rc;
+        }
+        else
+            return exec_builtin(n);
+    }
 
     pid_t pid = fork();
     if (pid < 0)
@@ -238,75 +258,6 @@ int exec_ast(ast *n)
         if (WIFEXITED(status2))
             return WEXITSTATUS(status2);
         return 1;
-    }
-    case NODE_AND:
-    {
-        int st = exec_ast(n->left);
-        if (st == 0)
-        {
-            return exec_ast(n->right);
-        }
-        else
-        {
-            return st;
-        }
-    }
-    case NODE_OR:
-    {
-        int st = exec_ast(n->left);
-        if (st != 0)
-        {
-            return exec_ast(n->right);
-        }
-        else
-        {
-            return st;
-        }
-    }
-    case NODE_SEQUENCE:
-        exec_ast(n->left);
-        return exec_ast(n->right);
-
-    case NODE_BACKGROUND:
-    {
-        pid_t pid = fork();
-        if (pid < 0)
-        {
-            perror("fork for bg");
-            return 1;
-        }
-
-        if (pid == 0)
-        {
-            // === 子进程逻辑 ===
-
-            // 1️⃣ 脱离父进程组 —— 否则仍是前台组
-            setpgid(0, 0);
-
-            // 2️⃣ 忽略 Ctrl+C / Ctrl+\ 信号（后台不应被中断）
-            signal(SIGINT, SIG_IGN);
-            signal(SIGQUIT, SIG_IGN);
-
-            // 3️⃣ 执行后台命令（左子树）
-            exec_ast(n->left);
-            exit(0);
-        }
-        else
-        {
-            // === 父进程逻辑 ===
-
-            // 4️⃣ 打印后台任务提示（可选）
-            printf("[bg pid %d]\n", pid);
-
-            // 5️⃣ 不等待后台进程
-            // 6️⃣ 继续执行右子树（前台命令）
-            if (n->right)
-                exec_ast(n->right);
-
-            // 7️⃣ 返回前台控制权
-            tcsetpgrp(STDIN_FILENO, getpgrp());
-            return 0;
-        }
     }
     case NODE_SUBSHELL:
     {
