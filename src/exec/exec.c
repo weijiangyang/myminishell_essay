@@ -17,7 +17,7 @@ int apply_redirs(t_redir *r)
                 perror("dup2 infile");
                 close(fd);
                 return 1;
-            }c
+            }
             close(fd);
         }
         else if (r->type == REDIR_OUTPUT) // >

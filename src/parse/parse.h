@@ -13,6 +13,8 @@
 #ifndef PARSE_H
 #define PARSE_H
 
+#include "../../libft/libft.h" 
+
 typedef enum
 {
     NODE_CMD,
@@ -41,7 +43,42 @@ typedef struct s_redir
     t_redir_type type;
     
 } t_redir;
+/**
+ * @struct s_cmd
+ * @brief  单向链表节点，用于在解析阶段暂存命令参数（argv）。
+ *
+ * 该结构体只在“解析阶段”使用，用于临时保存每一个解析到的
+ * 单词（token），最终会被转换为 AST 节点中的 node->argv（char **）。
+ *
+ * 生命周期与所有权（非常关键）：
+ * --------------------------------------------------------------
+ * 1) 在解析时，每读到一个 TOK_WORD，就会创建一个 t_cmd 节点：
+ *        new->arg = strdup(token->str);
+ *
+ * 2) 解析完成后，会将整个 t_cmd 链表复制到 node->argv：
+ *        node->argv[i] = strdup(tmp->arg);
+ *
+ * 3) 复制完成后，这个链表中的字符串(new->arg) 及链表节点本身
+ *    会由 free_argv_list() 统一释放。
+ *
+ * 重要：最终的内存所有者是 AST 中的 node->argv（char **）。
+ *      t_cmd 链表只是构造阶段的临时容器。
+ *
+ * 这样设计的好处：
+ *  - 避免 node->argv 与临时链表共享同一块字符串（从而避免 double-free）。
+ *  - 解析时能方便按顺序收集参数。
+ *  - 错误恢复逻辑（free_ast_partial）更简单明确。
+ *
+ * @field arg   strdup 得到的单个参数字符串（临时所有者）
+ * @field next  指向下一个 t_cmd 节点（单向链表）
+ */
+typedef t_list t_cmd;
 
+/*typedef struct s_cmd
+{
+    char *arg;
+    struct s_cmd *next;
+} t_cmd;*/
 typedef struct s_ast
 {
     node_type type;
@@ -63,6 +100,9 @@ ast *parse_and_or(t_lexer **cur);
 ast *parse_cmdline(t_lexer **cur);
 void free_ast(ast *node);
 void free_tokens(t_lexer *tok);
+void free_ast_partial(ast *node);
+void free_argv_list(t_cmd *a);
+void free_redir_list(t_redir *r);
 t_lexer *peek_token(t_lexer **cur);
 t_lexer *consume_token(t_lexer **cur);
 t_lexer *expect_token(tok_type type, t_lexer **cur);
