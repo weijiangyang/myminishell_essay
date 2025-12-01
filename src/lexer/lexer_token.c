@@ -12,27 +12,6 @@
 
 #include "../../include/minishell.h"
 
-// 作用：对单字符进行 token 分类。
-// 参数：`c` 字符。
-// 逻辑：按字符返回 `PIPE` / `LESS` / `GREAT` / `WORD` 等
-/*t_tokens	is_token(int c)
-{
-	if (c == '|')
-		return (PIPE);
-	if (c == '>')
-		return (GREAT);
-	if (c == '<')
-		return (LESS);
-	if (c == '&')
-		return (AMP);
-	if (c == ';')
-		return (SEMI);
-	if (c == '(')
-		return (LPAREN);
-	if (c == ')')
-		return (RPAREN);
-	return (0);
-}*/
 
 tok_type is_token(int c)
 {
@@ -42,10 +21,6 @@ tok_type is_token(int c)
 		return (TOK_REDIR_OUT);
 	if (c == '<')
 		return (TOK_REDIR_IN);
-	if (c == '&')
-		return (TOK_AMP);
-	if (c == ';')
-		return (TOK_SEMI);
 	if (c == '(')
 		return (TOK_LPAREN);
 	if (c == ')')

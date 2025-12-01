@@ -12,7 +12,6 @@
 
 #include "../../include/minishell.h"
 
-
 /**
  * peek_token
  * ----------------

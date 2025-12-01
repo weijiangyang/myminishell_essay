@@ -15,6 +15,8 @@
 
 #include "../../libft/libft.h" 
 
+#define BUFFER_SIZE 42
+
 typedef enum
 {
     NODE_CMD,
@@ -114,5 +116,8 @@ void free_t_cmd_node(t_cmd *argv_cmd);
 int heredoc_loop(int write_fd, const char *delimiter);
 int handle_heredoc(t_redir *new_redir);
 t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir);
+char	*get_next_line(int fd);
+int	end_line(char *str);
+char	*extract_line(char *str);
 
 #endif

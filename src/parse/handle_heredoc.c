@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
 /**
  * heredoc_loop
  * ------------------------------------------------------------
@@ -41,7 +40,7 @@
  *   - 避免 double write / 未关闭缓冲区。
  *   - perror 会在写入错误时打印信息。
  */
-int heredoc_loop(int write_fd, const char *delimiter)
+/*int heredoc_loop(int write_fd, const char *delimiter)
 {
     char *line;
     size_t len;
@@ -64,6 +63,31 @@ int heredoc_loop(int write_fd, const char *delimiter)
             return (perror("write"), free(line), -1);
     }
     free(line);
+    return 0;
+}*/
+
+int heredoc_loop(int write_fd, const char *delimiter)
+{
+    char *line;
+    size_t len;
+
+    while (1)
+    {
+        write(1, "heredoc< ", 9);
+        line = get_next_line(STDIN_FILENO);
+        if (!line)
+            break;
+        len = ft_strlen(line);
+        if (len > 0 && line[len - 1] == '\n')
+            line[len - 1] = '\0';
+        if (ft_strncmp(line, delimiter, ft_strlen(delimiter)) == 0)
+            return (free(line), 0);
+        if (len > 0)
+            line[len - 1] = '\n';
+        if (write(write_fd, line, len) < 0)
+            return (perror("write"), free(line), -1);
+        free(line);
+    }
     return 0;
 }
 
