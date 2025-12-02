@@ -107,7 +107,7 @@ void print_ast_pipe(ast *node, int depth);
 void print_ast_subshell(ast *node, int depth);
 void print_ast_cmd(ast *node);
 ast *parse_cmdline(t_lexer **cur);
-int main(int argc, char *argv[]);
+int main(int argc, char *argv[], char **envp);
 ast *parse_pipeline(t_lexer **cur);
 ast *parse_subshell(t_lexer **cur, ast *node);
 char *safe_strdup(const char *s);

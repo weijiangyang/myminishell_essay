@@ -116,6 +116,7 @@ static char *read_complete_line(void)
     return (line);
 }
 
+
 /**
  * main
  * ----------------
@@ -148,7 +149,7 @@ static char *read_complete_line(void)
  *   9. 循环结束时释放 lexer、命令行字符串和 t_minishell 结构
  *  10. 退出循环后清理 readline 历史记录
  */
-int main(int argc, char *argv[])
+int main(int argc, char *argv[], char **envp)
 {
     (void)argc;
     (void)argv;
@@ -178,6 +179,7 @@ int main(int argc, char *argv[])
             free(buf);
             break;
         }
+        general->envp = envp;
         general->raw_line = buf;
         // === Lexer 阶段 ===
         if (handle_lexer(general))

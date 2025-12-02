@@ -50,6 +50,7 @@ char	*expand_all(t_minishell *minishell, const char *str)
 	enum qstate	q;
 	t_exp_data	data;
 
+	data.minishell = minishell;
 	if (!str)
 		return (NULL);
 	i = 0;
