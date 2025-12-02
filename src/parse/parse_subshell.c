@@ -33,11 +33,11 @@
  *   4. 检查右括号 ')' 是否存在，若缺失打印语法错误并释放节点
  *   5. 返回子 shell AST 节点
  */
-ast *parse_subshell(t_lexer **cur, ast *node)
+ast *parse_subshell(t_lexer **cur, ast *node, t_minishell *minishell)
 {
     consume_token(cur);
     node->type = NODE_SUBSHELL;
-    node->sub = parse_pipeline(cur);
+    node->sub = parse_pipeline(cur, minishell);
     if (!expect_token(TOK_RPAREN, cur))
     {
         fprintf(stderr, "Syntax error: expected ')'\n");

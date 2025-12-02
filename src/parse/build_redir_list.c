@@ -42,13 +42,13 @@
  *   4. heredoc_fd 初始化为 -1，表示暂未创建管道。
  *   5. 返回配置完成的节点。
  */
-static t_redir *create_redir(tok_type type, char *content)
+static t_redir *create_redir(t_minishell *minishell,  tok_type type, char *content)
 {
     t_redir *new_node = ft_calloc(1, sizeof(t_redir));
     if (!new_node)
         return NULL;
 
-    new_node->filename = ft_strdup(content);
+    new_node->filename = ft_strdup(expander_str(minishell, content));
     if (!new_node->filename)
     {
         free(new_node);
@@ -139,7 +139,7 @@ static void redirlst_add_back(t_redir **lst, t_redir *new_node)
  *   5. 将新节点追加到 redir 链表末尾。
  *   6. 返回更新后的 redir 链表头。
  */
-t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir)
+t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *minishell)
 {
     t_lexer *op;
     t_lexer *filetok;
@@ -152,7 +152,7 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir)
         free_ast_partial(node);
         return NULL;
     }
-    new_redir = create_redir(op->tokentype, filetok->str);
+    new_redir = create_redir(minishell, op->tokentype, filetok->str);
     if (!new_redir)
     {
         free_ast_partial(node);

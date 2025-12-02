@@ -198,7 +198,7 @@ int main(int argc, char *argv[], char **envp)
         expander_list(general, general->lexer);
         // === Parser 阶段 ===
         t_lexer *cursor = general->lexer;
-        ast *root = parse_cmdline(&cursor);
+        ast *root = parse_cmdline(&cursor, general);
         if (root)
         {
             printf("=== AST ===\n");

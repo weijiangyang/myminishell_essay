@@ -13,7 +13,7 @@
 #ifndef PARSE_H
 #define PARSE_H
 
-#include "../../libft/libft.h" 
+#include "../../libft/libft.h"
 
 #define BUFFER_SIZE 42
 
@@ -43,7 +43,7 @@ typedef struct s_redir
     int heredoc_fd;
     bool is_expanded;
     t_redir_type type;
-    
+
 } t_redir;
 /**
  * @struct s_cmd
@@ -89,8 +89,8 @@ typedef struct s_ast
     struct s_ast *sub;
 } ast;
 
-ast *parse_pipeline(t_lexer **cur);
-ast *parse_cmdline(t_lexer **cur);
+
+
 void free_ast(ast *node);
 void free_tokens(t_lexer *tok);
 void free_ast_partial(ast *node);
@@ -104,20 +104,21 @@ void print_indent(int depth);
 void print_ast(ast *node, int depth);
 void print_ast_by_type(ast *node, int depth);
 void print_ast_pipe(ast *node, int depth);
-void print_ast_subshell(ast *node, int depth);
+
 void print_ast_cmd(ast *node);
-ast *parse_cmdline(t_lexer **cur);
+ast *parse_cmdline(t_lexer **cur, t_minishell *minishell);
+void print_ast_subshell(ast *node, int depth);
 int main(int argc, char *argv[], char **envp);
-ast *parse_pipeline(t_lexer **cur);
-ast *parse_subshell(t_lexer **cur, ast *node);
+ast *parse_pipeline(t_lexer **cur, t_minishell *minishell);
+ast *parse_subshell(t_lexer **cur, ast *node, t_minishell *minishell);
 char *safe_strdup(const char *s);
-ast *parse_simple_cmd_redir_list(t_lexer **cur);
+ast *parse_simple_cmd_redir_list(t_lexer **cur, t_minishell *minishell);
 void free_t_cmd_node(t_cmd *argv_cmd);
 int heredoc_loop(int write_fd, const char *delimiter);
 int handle_heredoc(t_redir *new_redir);
-t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir);
-char	*get_next_line(int fd);
-int	end_line(char *str);
-char	*extract_line(char *str);
+t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *minishell);
+char *get_next_line(int fd);
+int end_line(char *str);
+char *extract_line(char *str);
 
 #endif

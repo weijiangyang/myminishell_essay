@@ -32,12 +32,12 @@
  *      - 如果存在且不是 TOK_END，打印语法错误并释放 AST
  *   3. 返回 AST 根节点
  */
-ast *parse_cmdline(t_lexer **cur)
+ast *parse_cmdline(t_lexer **cur, t_minishell *minishell)
 {
     ast *root;
     t_lexer *pt;
 
-    root = parse_pipeline(cur);
+    root = parse_pipeline(cur, minishell);
     if (!root)
         return NULL;
     pt = peek_token(cur);

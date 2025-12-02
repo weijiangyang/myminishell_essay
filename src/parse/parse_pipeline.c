@@ -35,7 +35,7 @@
  *   4. 为管道创建一个新的 NODE_PIPE AST 节点，将左/右子树连接
  *   5. 更新 left 指针为新创建的 PIPE 节点，继续处理后续管道
  */
-static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes)
+static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes, t_minishell *minishell)
 {
     while (peek_token(cur) && peek_token(cur)->tokentype == TOK_PIPE)
     {
@@ -43,7 +43,7 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes)
         ast *node;
 
         consume_token(cur);
-        right = parse_simple_cmd_redir_list(cur);
+        right = parse_simple_cmd_redir_list(cur, minishell);
         if (!right)
             return (free_ast(*left), NULL);
         node = ft_calloc(1, sizeof(ast));
@@ -78,16 +78,16 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes)
  *   3. 将管道数量 n_pipes 保存到 AST 根节点的 n_pipes 字段
  *   4. 返回 AST 根节点
  */
-ast *parse_pipeline(t_lexer **cur)
+ast *parse_pipeline(t_lexer **cur, t_minishell *minishell)
 {
     ast *left;
     int n_pipes;
 
-    left = parse_simple_cmd_redir_list(cur);
+    left = parse_simple_cmd_redir_list(cur, minishell);
     if (!left)
         return NULL;
     n_pipes = 0;
-    parse_pipeline_1(cur, &left, &n_pipes);
+    parse_pipeline_1(cur, &left, &n_pipes, minishell);
     left->n_pipes = n_pipes;
     return left;
 }

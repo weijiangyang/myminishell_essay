@@ -121,7 +121,7 @@ static char **build_argvs(t_cmd *argv_cmd, t_redir *redir, ast *node)
  *   - build_argvs 内部分配 argv 数组并释放 t_cmd 链表节点。
  *   - 避免 double free，确保 AST 节点在失败时安全释放。
  */
-static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
+static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node, t_minishell *minishell)
 {
     t_lexer *pt;
     t_redir *redir;
@@ -136,7 +136,7 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
     while ((pt = peek_token(cur)) != NULL)
     {
         if (is_redir_token(pt))
-            redir = build_redir(cur, node, redir);
+            redir = build_redir(cur, node, redir, minishell);
         else if (pt->tokentype == TOK_WORD)
             ft_lstadd_back(&argv_cmd, create_argv(consume_token(cur)->str));
         else
@@ -170,7 +170,7 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node)
  *      - 如果是 '(' → 调用 parse_subshell 构建子 shell AST。
  *      - 否则 → 调用 parse_normal_cmd_redir_list 构建普通命令 AST。
  */
-ast *parse_simple_cmd_redir_list(t_lexer **cur)
+ast *parse_simple_cmd_redir_list(t_lexer **cur, t_minishell *minishell)
 {
     ast *node;
     t_lexer *pt;
@@ -180,6 +180,6 @@ ast *parse_simple_cmd_redir_list(t_lexer **cur)
     if (!node)
         return (NULL);
     if (pt && pt->tokentype == TOK_LPAREN)
-        return (parse_subshell(cur, node));
-    return (parse_normal_cmd_redir_list(cur, node));
+        return (parse_subshell(cur, node, minishell));
+    return (parse_normal_cmd_redir_list(cur, node, minishell));
 }
