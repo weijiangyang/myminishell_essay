@@ -1,5 +1,5 @@
-#include "../../include/minishell.h"
-#include "../../libft//libft.h"
+#include "../../../include/minishell.h"
+#include "../../../libft//libft.h"
 
 // 这是一个简化的实现，只处理一些常见的转义序列
 static void print_with_escape(const char *str)

@@ -44,5 +44,7 @@ typedef struct s_minishell
 	// loop
 } t_minishell;
 
+
+
 #endif
 

@@ -82,30 +82,73 @@ static char *ft_strjoin_free(char *s1, char *s2, int mode1, int mode2)
     return (res);
 }
 
-/**
- * read_complete_line
- * ----------------
- * 目的：
- *   从用户读取一行命令，处理多行输入情况（未闭合引号时继续提示）。
- *
- * 返回值：
- *   - 成功：返回完整的用户输入字符串
- *   - 用户中断或 EOF：返回 NULL
- *
- * 行为说明：
- *   1. 使用 readline 提示 "minishell$> " 获取第一行输入
- *   2. 检查输入中是否存在未闭合的引号：
- *        - 如果存在，提示 "> " 继续读取下一行
- *        - 将上一行与新行拼接，并释放旧行
- *   3. 循环直到所有引号闭合或用户输入 EOF/中断
- *   4. 返回完整命令行字符串
+/*
+ * 函数名: get_relative_path
+ * -----------------------------------------------------------------------------
+ * 功能: 将当前工作目录 (cwd) 的绝对路径转换为相对于用户主目录 (~/) 的相对路径。
+ * 如果 cwd 在 $HOME 之下，则用 '~' 替换 $HOME 的部分。
+ * * 参数:
+ * cwd: 当前工作目录的绝对路径字符串 (const char *，通常来自 getcwd 的结果)。
+ * * 返回值:
+ * - 成功: 新分配的字符串指针，包含相对路径（例如 "~/minishell"）。
+ * - 失败: 如果内存分配失败或 $HOME 无效，返回原始绝对路径的副本，或返回 "."。
+ * * 注意:
+ * - 调用者必须使用 free() 释放此函数返回的指针，以避免内存泄漏。
+ */
+static char *get_relative_path(const char *cwd)
+{
+    const char *home_dir = getenv("HOME");
+    char *relative_path;
+    size_t home_len;
+
+    if (!cwd || !home_dir)
+        return strdup(cwd ? cwd : ".");
+    home_len = strlen(home_dir);
+    if (strncmp(cwd, home_dir, home_len) == 0 && (cwd[home_len] == '/' || cwd[home_len] == '\0'))
+    {
+        size_t suffix_len = strlen(cwd + home_len);
+        relative_path = (char *)malloc(1 + suffix_len + 1);
+        if (!relative_path)
+            return strdup(cwd);
+        relative_path[0] = '~';
+        strcpy(relative_path + 1, cwd + home_len);
+        return relative_path; 
+    }
+    return strdup(cwd);
+}
+
+/*
+ * 函数名: read_complete_line
+ * -----------------------------------------------------------------------------
+ * 功能:
+ * 1. 获取当前工作目录 (CWD)，并转换为相对于 $HOME 的相对路径（例如：~）。
+ * 2. 使用 get_relative_path 的结果和 "$ " 常量生成完整的 readline 提示符。
+ * 3. 使用 readline() 获取用户输入。
+ * 4. 检查输入是否包含未闭合的引号 ('has_unclosed_quotes' 假定实现)，如果包含，
+ * 则循环使用 "> " 提示符读取后续行，直到引号闭合或用户按下 EOF (Ctrl+D)。
+ * 5. 使用 ft_strjoin_free 拼接多行输入。
+ * * 返回值:
+ * - 成功: 用户输入的完整、拼接后的行字符串 (char *，由 readline 或 ft_strjoin_free 分配)。
+ * - 失败: 如果内存分配失败或用户输入 EOF (Ctrl+D)，返回 NULL。
+ * * 注意:
+ * - 必须释放为提示符分配的内存 (full_prompt 和 relative_path)。
+ * - 调用者必须负责 free() 返回的 'line' 指针。
  */
 static char *read_complete_line(void)
 {
-    char *line = NULL;
-    char *next = NULL;
+    char *line;
+    char *next;
+    char cpth[1000];
+    char *relative_path;
+    char *full_prompt;
 
-    line = readline("minishell$> ");
+    getcwd(cpth, 1000);
+    relative_path = get_relative_path(cpth);
+    full_prompt = ft_strjoin(relative_path, "$ ");
+    free(relative_path);
+    if (!full_prompt)
+        return (NULL);
+    line = readline(full_prompt);
     while (has_unclosed_quotes(line))
     {
         next = readline("> ");
@@ -113,9 +156,9 @@ static char *read_complete_line(void)
             break;
         line = ft_strjoin_free(line, next, 1, 1);
     }
+    free(full_prompt);
     return (line);
 }
-
 
 /**
  * main
@@ -216,5 +259,6 @@ int main(int argc, char *argv[], char **envp)
         free(general);
     }
     clear_history();
+    free(buf);
     return 0;
 }

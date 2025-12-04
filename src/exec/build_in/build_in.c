@@ -1,4 +1,4 @@
-#include "../../include/minishell.h"
+#include "../../../include/minishell.h"
 
 // 检测命令是否为内置命令，返回 1 如果是，否则 0
 int is_builtin(const char *cmd)
@@ -22,35 +22,8 @@ int exec_builtin(ast *node)
 
     // 在这里根据命令名执行
     if (ft_strncmp(node->argv[0], "cd", 2) == 0)
-    {
-        if (node->argv[1])
-            return chdir(node->argv[1]) == 0 ? 0 : 1;
-        else
-        {
-            char *home_path = getenv("HOME");
-            if (home_path == NULL)
-            {
-                return 1;
-            }
-            else
-            {
-                return chdir(home_path) == 0 ? 0 : 1;
-            }
-        }
-    }
+        ft_cd(node->argv);
     else if (ft_strncmp(node->argv[0], "echo", 4) == 0)
-        /*{
-            int i = 1;
-            while (node->argv[i])
-            {
-                printf("%s", node->argv[i]);
-                if (node->argv[i + 1])
-                    printf(" ");
-                i++;
-            }
-            printf("\n");
-            return 0;
-        }*/
         ft_echo(node->argv);
     else if (strcmp(node->argv[0], "pwd") == 0)
     {
