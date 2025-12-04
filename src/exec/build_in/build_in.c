@@ -15,7 +15,7 @@ int is_builtin(const char *cmd)
 }
 
 // 执行内置命令，返回退出码
-int exec_builtin(ast *node)
+int exec_builtin(ast *node, char **envp)
 {
     if (!node || !node->argv || !node->argv[0])
         return 1;
@@ -35,11 +35,13 @@ int exec_builtin(ast *node)
         }
         return 1;
     }
+    else if (strcmp(node->argv[0], "env") == 0)
+        builtin_env(node->argv, envp);
     else if (strcmp(node->argv[0], "exit") == 0)
     {
         int status = 0;
         if (node->argv[1])
-            status = atoi(node->argv[1]);
+            status = ft_atoi(node->argv[1]);
         exit(status);
     }
     // 其它内置命令类似处理

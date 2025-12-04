@@ -142,7 +142,7 @@ static char *read_complete_line(void)
     char *relative_path;
     char *full_prompt;
 
-    getcwd(cpth, 1000);
+    getcwd(cpth, 4096);
     relative_path = get_relative_path(cpth);
     full_prompt = ft_strjoin(relative_path, "$ ");
     free(relative_path);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[], char **envp)
         {
             printf("=== AST ===\n");
             print_ast(root, 0);
-            exec_ast(root);
+            exec_ast(root, general->envp);
             free_ast(root);
         }
         else

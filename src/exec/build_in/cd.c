@@ -10,7 +10,8 @@ int ft_cd(char **argv)
         if (status == 0)
             return 0;
         else
-            fprintf(stderr, "ce path n\'existe pas\n");
+            fprintf(stderr, "bash: cd: %s: No such file or directory\n", argv[1]);
+
         return 1;
     }
     else
