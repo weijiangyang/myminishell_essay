@@ -35,6 +35,9 @@ int exec_builtin(ast *node, char **envp)
         }
         return 1;
     }
+    else if (strcmp(node->argv[0], "export") == 0)
+        builtin_export(node->argv, envp);
+
     else if (strcmp(node->argv[0], "env") == 0)
         builtin_env(node->argv, envp);
     else if (strcmp(node->argv[0], "exit") == 0)

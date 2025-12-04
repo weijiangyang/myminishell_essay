@@ -1,7 +1,7 @@
 #include "../../../include/minishell.h"
 #include "../../../libft//libft.h"
 
-static void    print_env(t_env *env)
+void    print_env(t_env *env)
 {
     while (env)
     {
@@ -13,7 +13,7 @@ static void    print_env(t_env *env)
     }
 }
 
-static t_env	*env_new(char *key, char *value)
+t_env	*env_new(char *key, char *value)
 {
 	t_env	*new_env;
 
@@ -26,7 +26,7 @@ static t_env	*env_new(char *key, char *value)
 	return (new_env);
 }
 
-static void	env_add_back(t_env **env, t_env *new_env)
+void	env_add_back(t_env **env, t_env *new_env)
 {
 	t_env	*last;
 
@@ -43,7 +43,7 @@ static void	env_add_back(t_env **env, t_env *new_env)
 	last->next = new_env;
 }
 
-static t_env *init_env(char **envp)
+t_env *init_env(char **envp)
 {
     t_env *env = NULL;
     int     i = 0;
