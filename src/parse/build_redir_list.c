@@ -47,8 +47,13 @@ static t_redir *create_redir(t_minishell *minishell,  tok_type type, char *conte
     t_redir *new_node = ft_calloc(1, sizeof(t_redir));
     if (!new_node)
         return NULL;
-
-    new_node->filename = ft_strdup(expander_str(minishell, content));
+    char *new_content = ft_strdup(content);
+    if (!new_content)
+    {
+        free(new_node);
+        return NULL;
+    }
+    new_node->filename = ft_strdup(expander_str(minishell, new_content));
     if (!new_node->filename)
     {
         free(new_node);
