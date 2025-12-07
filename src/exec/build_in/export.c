@@ -13,13 +13,13 @@ t_env *find_env_var(t_env *env, const char *key)
 }
 
 // 用来设置或更新环境变量
-int builtin_export(char **argv, char **envp)
+int builtin_export(char **argv, t_env **env)
 {
-    t_env *env_1 = init_env(envp);
+    
     if (argv[1] == NULL)
     {
         // 如果没有参数，打印所有的 export 环境变量
-        print_env(env_1);
+        print_env(*env);
         return 0;
     }
 
@@ -34,19 +34,19 @@ int builtin_export(char **argv, char **envp)
             char *value = strdup(equal + 1);
 
             // 查找是否已存在该环境变量
-            t_env *existing = find_env_var(env_1, key);
+            t_env *existing = find_env_var(*env, key);
             if (existing)
             {
                 // 如果已经存在，更新值
                 free(existing->value);
                 existing->value = value;
+                free(key);
             }
             else
             {
                 // 如果不存在，创建新变量
-                env_add_back(&env_1, env_new(key, value));
+                env_add_back(env, env_new(key, value));
             }
-            free(key);
         }
         else
         {

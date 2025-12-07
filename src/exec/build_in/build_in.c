@@ -15,7 +15,7 @@ int is_builtin(const char *cmd)
 }
 
 // 执行内置命令，返回退出码
-int exec_builtin(ast *node, char **envp)
+int exec_builtin(ast *node, t_env **env)
 {
     if (!node || !node->argv || !node->argv[0])
         return 1;
@@ -36,10 +36,10 @@ int exec_builtin(ast *node, char **envp)
         return 1;
     }
     else if (strcmp(node->argv[0], "export") == 0)
-        builtin_export(node->argv, envp);
+        builtin_export(node->argv, env);
 
     else if (strcmp(node->argv[0], "env") == 0)
-        builtin_env(node->argv, envp);
+        builtin_env(node->argv, *env);
     else if (strcmp(node->argv[0], "exit") == 0)
     {
         int status = 0;

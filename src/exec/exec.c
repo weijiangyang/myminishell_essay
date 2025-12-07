@@ -138,7 +138,7 @@ static void close_heredoc_fds(t_redir *r)
 }
 
 // 执行命令节点（fork + exec 或内建）
-static int exec_cmd_node(ast *n, char **envp)
+static int exec_cmd_node(ast *n, t_env **env)
 {
     if (!n)
         return 1;
@@ -156,7 +156,7 @@ static int exec_cmd_node(ast *n, char **envp)
             int stdout_bak = dup(STDOUT_FILENO);
             if (apply_redirs(n->redir) < 0)
                 return 1;
-            int rc = exec_builtin(n, envp);
+            int rc = exec_builtin(n, env);
             // 恢复标准输入输出
             dup2(stdin_bak, STDIN_FILENO);
             dup2(stdout_bak, STDOUT_FILENO);
@@ -165,7 +165,7 @@ static int exec_cmd_node(ast *n, char **envp)
             return rc;
         }
         else
-            return exec_builtin(n, envp);
+            return exec_builtin(n, env);
     }
 
     pid_t pid = fork();
@@ -199,14 +199,14 @@ static int exec_cmd_node(ast *n, char **envp)
     }
 }
 
-int exec_ast(ast *n, char **envp)
+int exec_ast(ast *n, t_env **env)
 {
     if (!n)
         return 0;
     switch (n->type)
     {
     case NODE_CMD:
-        return exec_cmd_node(n, envp);
+        return exec_cmd_node(n, env);
     case NODE_PIPE:
     {
         // 管道：创建 pipe，然后 fork 两个子进程
@@ -228,7 +228,7 @@ int exec_ast(ast *n, char **envp)
             close(pipefd[0]);
             dup2(pipefd[1], STDOUT_FILENO);
             close(pipefd[1]);
-            int rc = exec_ast(n->left, envp);
+            int rc = exec_ast(n->left, env);
             exit(rc);
         }
 
@@ -244,7 +244,7 @@ int exec_ast(ast *n, char **envp)
             close(pipefd[1]);
             dup2(pipefd[0], STDIN_FILENO);
             close(pipefd[0]);
-            int rc = exec_ast(n->right, envp);
+            int rc = exec_ast(n->right, env);
             exit(rc);
         }
 
@@ -269,7 +269,7 @@ int exec_ast(ast *n, char **envp)
         }
         if (pid == 0)
         {
-            int rc = exec_ast(n->sub, envp);
+            int rc = exec_ast(n->sub, env);
             exit(rc);
         }
         else

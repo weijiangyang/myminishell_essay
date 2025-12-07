@@ -45,7 +45,9 @@ void	env_add_back(t_env **env, t_env *new_env)
 
 t_env *init_env(char **envp)
 {
-    t_env *env = NULL;
+    t_env *env;
+
+    env = NULL;
     int     i = 0;
 
     while (envp[i])
@@ -62,11 +64,9 @@ t_env *init_env(char **envp)
     return env;
 }
 
-int builtin_env(char **argv, char **envp)
+int builtin_env(char **argv, t_env *env)
 {
-    t_env *env;
-
-    env = init_env(envp);
+    
     if (argv[1])  // si des arguments → erreur
     {
         fprintf(stderr, "env: %s: No such file or directory\n", argv[1]);

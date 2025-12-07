@@ -160,7 +160,43 @@ static char *read_complete_line(void)
     return (line);
 }
 
-/**
+
+/*
+ * 函数名: change_envp
+ * -----------------------------------------------------------------------------
+ * 功能: 
+ *   将 t_env 链表中的环境变量更新到给定的 char** envp 数组中。
+ *   遍历 t_env 链表，将每个环境变量（键值对）格式化为 "KEY=VALUE" 字符串并更新到 envp 中。
+ * 
+ * 参数:
+ *   - env  : 一个指向 t_env 链表的指针，表示当前的环境变量链表。
+ *   - envp : 一个指向环境变量数组的指针（char**），用于存储更新后的环境变量。
+ * 
+ * 返回值:
+ *   - 无返回值。
+ * 
+ * 行为说明:
+ *   1. 遍历 envp 数组，并将 t_env 链表中的每个节点的 key 和 value 拼接成 "key=value" 格式。
+ *   2. 更新 envp 数组中的每个元素。
+ *   3. 在处理完每个 t_env 链表节点后，指针 tmp 会指向下一个节点。
+ */
+ void change_envp(t_env *env, char **envp)
+ {
+    int i =0;
+    t_env *tmp;
+
+    tmp = env;
+    while (envp[i])
+    {
+        char *str1 = ft_strjoin_free(tmp->key, "=", 0, 0);
+        char *str2 = ft_strjoin_free(str1, tmp->value, 0, 0);
+        envp[i] = str2;
+        i++;
+        tmp = tmp->next;
+    }
+ }
+
+ /**
  * main
  * ----------------
  * 目的：
@@ -192,6 +228,7 @@ static char *read_complete_line(void)
  *   9. 循环结束时释放 lexer、命令行字符串和 t_minishell 结构
  *  10. 退出循环后清理 readline 历史记录
  */
+
 int main(int argc, char *argv[], char **envp)
 {
     (void)argc;
@@ -199,6 +236,7 @@ int main(int argc, char *argv[], char **envp)
 
     char *buf;
     t_minishell *general;
+    t_env *env = init_env(envp);
 
     while (1)
     {
@@ -222,6 +260,8 @@ int main(int argc, char *argv[], char **envp)
             free(buf);
             break;
         }
+    
+        change_envp(env, envp);
         general->envp = envp;
         general->raw_line = buf;
         // === Lexer 阶段 ===
@@ -246,7 +286,7 @@ int main(int argc, char *argv[], char **envp)
         {
             printf("=== AST ===\n");
             print_ast(root, 0);
-            exec_ast(root, general->envp);
+            exec_ast(root, &env);
             free_ast(root);
         }
         else
