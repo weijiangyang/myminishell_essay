@@ -180,21 +180,56 @@ static char *read_complete_line(void)
  *   2. 更新 envp 数组中的每个元素。
  *   3. 在处理完每个 t_env 链表节点后，指针 tmp 会指向下一个节点。
  */
- void change_envp(t_env *env, char **envp)
- {
-    int i =0;
-    t_env *tmp;
+// 重新分配并更新 envp 数组
+void change_envp(t_env *env, char ***envp)
+{
+    int i = 0;
+    t_env *tmp = env;
 
-    tmp = env;
-    while (envp[i])
-    {
-        char *str1 = ft_strjoin_free(tmp->key, "=", 0, 0);
-        char *str2 = ft_strjoin_free(str1, tmp->value, 0, 0);
-        envp[i] = str2;
+    // 计算链表中环境变量的数量
+    while (tmp) {
         i++;
         tmp = tmp->next;
     }
- }
+
+    // 如果 envp 为空，进行内存分配
+    if (*envp == NULL) {
+        *envp = malloc(sizeof(char*) * (i + 1)); // 为 envp 分配内存
+        if (*envp == NULL) {
+            perror("malloc failed");
+            return;
+        }
+    }
+
+    // 使用临时变量来避免丢失原指针
+    char **new_envp = realloc(*envp, sizeof(char*) * (i + 1)); // 重新分配内存
+    if (!new_envp) {
+        perror("realloc failed");
+        return; // realloc 失败时返回
+    }
+
+    *envp = new_envp; // 更新 envp 指针
+
+    tmp = env;
+    i = 0;
+    while (tmp) {
+        char *str1 = ft_strjoin_free(tmp->key, "=", 0, 0);
+        char *str2 = ft_strjoin_free(str1, tmp->value, 0, 0);
+        (*envp)[i] = str2;  // 将新的字符串存入 envp 数组
+        tmp = tmp->next;
+        i++;
+    }
+
+    // 最后确保 envp 数组以 NULL 结尾
+    (*envp)[i] = NULL;
+
+    // 调试信息：打印结果
+    printf("envp array updated, number of items: %d\n", i);
+    for (int j = 0; (*envp)[j] != NULL; j++) {
+        printf("envp[%d]: %s\n", j, (*envp)[j]);
+    }
+}
+
 
  /**
  * main
@@ -261,7 +296,7 @@ int main(int argc, char *argv[], char **envp)
             break;
         }
     
-        change_envp(env, envp);
+        change_envp(env, &envp);
         general->envp = envp;
         general->raw_line = buf;
         // === Lexer 阶段 ===
