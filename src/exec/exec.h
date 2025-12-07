@@ -18,5 +18,7 @@ t_env	*env_new(char *key, char *value);
 void	env_add_back(t_env **env, t_env *new_env);
 t_env *init_env(char **envp);
 int builtin_export(char **argv, t_env **env);
+int builtin_unset(char **argv, t_env **env);
+t_env *find_env_var(t_env *env, const char *key);
 
 #endif

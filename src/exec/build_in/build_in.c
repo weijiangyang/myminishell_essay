@@ -47,6 +47,8 @@ int exec_builtin(ast *node, t_env **env)
             status = ft_atoi(node->argv[1]);
         exit(status);
     }
+    else if (strcmp(node->argv[0], "unset") == 0)
+        builtin_unset(node->argv, env);
     // 其它内置命令类似处理
     return 1; // 未知内置
 }
