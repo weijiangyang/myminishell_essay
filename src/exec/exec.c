@@ -178,6 +178,7 @@ static int exec_cmd_node(ast *n, t_env **env)
 
     if (pid == 0)
     {
+        setup_child_signals();
         // child
         t_redir *r = n->redir;
         if (apply_redirs(r))
@@ -189,6 +190,7 @@ static int exec_cmd_node(ast *n, t_env **env)
     }
     else
     {
+        //setup_parent_exec_signals();
         // parent
         // parent should close heredoc read fds
         close_heredoc_fds(n->redir);
