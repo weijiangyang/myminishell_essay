@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <signal.h>
 
 typedef struct s_minishell t_minishell;
 

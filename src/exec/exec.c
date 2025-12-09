@@ -1,4 +1,5 @@
 #include "../../include/minishell.h"
+
 int apply_redirs(t_redir *r)
 {
     int fd;
@@ -179,7 +180,7 @@ static int exec_cmd_node(ast *n, t_env **env)
     {
         // child
         t_redir *r = n->redir;
-        if (apply_redirs(r) < 0)
+        if (apply_redirs(r))
             exit(1);
 
         execvp(n->argv[0], n->argv);
