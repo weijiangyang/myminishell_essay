@@ -146,25 +146,34 @@ static void redirlst_add_back(t_redir **lst, t_redir *new_node)
  */
 t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *minishell)
 {
-    t_lexer *op;
-    t_lexer *filetok;
+    t_lexer *op = consume_token(cur);
+    t_lexer *filetok = consume_token(cur);
     t_redir *new_redir;
 
-    op = consume_token(cur);
-    filetok = consume_token(cur);
     if (!op || !filetok || filetok->tokentype != TOK_WORD)
     {
         free_ast_partial(node);
         return NULL;
     }
+
     new_redir = create_redir(minishell, op->tokentype, filetok->str);
     if (!new_redir)
     {
         free_ast_partial(node);
         return NULL;
     }
+
     if (op->tokentype == TOK_HEREDOC)
-        handle_heredoc(new_redir);
+    {
+        if (handle_heredoc(new_redir, minishell) == -1)
+        {
+            // heredoc 被 Ctrl+C 中断，shell->last_exit_status 已设置 130
+            redirlst_add_back(&redir, new_redir);
+            return NULL; // 返回 NULL 上层可检测停止命令执行
+        }
+    }
+
     redirlst_add_back(&redir, new_redir);
     return redir;
 }
+

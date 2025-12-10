@@ -7,7 +7,7 @@ typedef struct s_env {
     struct s_env *next;
 } t_env;
 
-int exec_ast(ast *n, t_env **env);
+int exec_ast(ast *n, t_env **env, t_minishell *minishell);
 int exec_builtin(ast *node, t_env **env);
 int is_builtin(const char *cmd);
 int ft_cd(char **argv);

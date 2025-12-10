@@ -1,6 +1,6 @@
 #include "../../include/minishell.h"
 
-int apply_redirs(t_redir *r)
+int apply_redirs(t_redir *r, t_minishell *minishell)
 {
     int fd;
     while (r)
@@ -58,6 +58,7 @@ int apply_redirs(t_redir *r)
             if (r->heredoc_fd < 0)
             {
                 fprintf(stderr, "heredoc fd invalid\n");
+                minishell->last_exit_status = 130;
                 return 1;
             }
             if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
@@ -139,7 +140,7 @@ static void close_heredoc_fds(t_redir *r)
 }
 
 // 执行命令节点（fork + exec 或内建）
-static int exec_cmd_node(ast *n, t_env **env)
+static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
 {
     if (!n)
         return 1;
@@ -155,7 +156,7 @@ static int exec_cmd_node(ast *n, t_env **env)
             // 临时保存标准输入输出
             int stdin_bak = dup(STDIN_FILENO);
             int stdout_bak = dup(STDOUT_FILENO);
-            if (apply_redirs(n->redir) < 0)
+            if (apply_redirs(n->redir, minishell) < 0)
                 return 1;
             int rc = exec_builtin(n, env);
             // 恢复标准输入输出
@@ -181,7 +182,7 @@ static int exec_cmd_node(ast *n, t_env **env)
         setup_child_signals();
         // child
         t_redir *r = n->redir;
-        if (apply_redirs(r))
+        if (apply_redirs(r, minishell))
             exit(1);
 
         execvp(n->argv[0], n->argv);
@@ -202,14 +203,14 @@ static int exec_cmd_node(ast *n, t_env **env)
     }
 }
 
-int exec_ast(ast *n, t_env **env)
+int exec_ast(ast *n, t_env **env, t_minishell *minishell)
 {
     if (!n)
         return 0;
     switch (n->type)
     {
     case NODE_CMD:
-        return exec_cmd_node(n, env);
+        return exec_cmd_node(n, env, minishell);
     case NODE_PIPE:
     {
         // 管道：创建 pipe，然后 fork 两个子进程
@@ -231,7 +232,7 @@ int exec_ast(ast *n, t_env **env)
             close(pipefd[0]);
             dup2(pipefd[1], STDOUT_FILENO);
             close(pipefd[1]);
-            int rc = exec_ast(n->left, env);
+            int rc = exec_ast(n->left, env, minishell);
             exit(rc);
         }
 
@@ -247,7 +248,7 @@ int exec_ast(ast *n, t_env **env)
             close(pipefd[1]);
             dup2(pipefd[0], STDIN_FILENO);
             close(pipefd[0]);
-            int rc = exec_ast(n->right, env);
+            int rc = exec_ast(n->right, env, minishell);
             exit(rc);
         }
 
@@ -272,7 +273,7 @@ int exec_ast(ast *n, t_env **env)
         }
         if (pid == 0)
         {
-            int rc = exec_ast(n->sub, env);
+            int rc = exec_ast(n->sub, env, minishell);
             exit(rc);
         }
         else

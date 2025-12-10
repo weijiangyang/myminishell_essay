@@ -112,7 +112,7 @@ static char *get_relative_path(const char *cwd)
             return strdup(cwd);
         relative_path[0] = '~';
         strcpy(relative_path + 1, cwd + home_len);
-        return relative_path; 
+        return relative_path;
     }
     return strdup(cwd);
 }
@@ -160,7 +160,7 @@ static char *read_complete_line(void)
     return (line);
 }
 
- /**
+/**
  * main
  * ----------------
  * 目的：
@@ -224,7 +224,7 @@ int main(int argc, char *argv[], char **envp)
             free(buf);
             break;
         }
-    
+
         change_envp(env, &envp);
         general->envp = envp;
         general->raw_line = buf;
@@ -246,17 +246,22 @@ int main(int argc, char *argv[], char **envp)
         // === Parser 阶段 ===
         t_lexer *cursor = general->lexer;
         ast *root = parse_cmdline(&cursor, general);
+
+    
+
         if (root)
         {
             printf("=== AST ===\n");
             print_ast(root, 0);
-            exec_ast(root, &env);
+            int status = exec_ast(root, &env, general);
+            general->last_exit_status = status; // 保存退出码
             free_ast(root);
         }
         else
         {
             fprintf(stderr, "Parsing failed.\n");
         }
+
         // === 清理内存 ===
         free_tokens(general->lexer);
         free(buf);
