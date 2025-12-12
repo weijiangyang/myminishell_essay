@@ -201,6 +201,7 @@ int main(int argc, char *argv[], char **envp)
     char *buf;
     t_minishell *general;
     t_env *env = init_env(envp);
+    general = ft_calloc(1, sizeof(t_minishell));
 
     while (1)
     {
@@ -217,7 +218,7 @@ int main(int argc, char *argv[], char **envp)
             continue;
         }
         add_history(buf);
-        general = ft_calloc(1, sizeof(t_minishell));
+
         if (!general)
         {
             perror("calloc");
@@ -231,14 +232,14 @@ int main(int argc, char *argv[], char **envp)
         // === Lexer 阶段 ===
         if (handle_lexer(general))
         {
-            printf("Lexer tokens:\n");
+            // printf("Lexer tokens:\n");
             print_lexer(general->lexer);
         }
         if (!general->lexer)
         {
             fprintf(stderr, "tokenize failed\n");
             free(buf);
-            free(general);
+            // free(general);
             continue;
         }
         //=== expander 阶段 ===
@@ -246,14 +247,12 @@ int main(int argc, char *argv[], char **envp)
         // === Parser 阶段 ===
         t_lexer *cursor = general->lexer;
         ast *root = parse_cmdline(&cursor, general);
-
-    
-
         if (root)
         {
-            printf("=== AST ===\n");
-            print_ast(root, 0);
+            // printf("=== AST ===\n");
+            // print_ast(root, 0);
             int status = exec_ast(root, &env, general);
+            printf("status is  %d\n", status);
             general->last_exit_status = status; // 保存退出码
             free_ast(root);
         }
@@ -263,9 +262,10 @@ int main(int argc, char *argv[], char **envp)
         }
 
         // === 清理内存 ===
-        free_tokens(general->lexer);
+        //free_tokens(general->lexer);
+        general->lexer = NULL;
         free(buf);
-        free(general);
+        // free(general);
     }
     clear_history();
     free(buf);

@@ -179,15 +179,14 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
 
     if (pid == 0)
     {
-        setup_child_signals();
         // child
         t_redir *r = n->redir;
         if (apply_redirs(r, minishell))
-            exit(1);
+            exit(130);
 
         execvp(n->argv[0], n->argv);
         perror("execvp");
-        exit(1);
+        exit(0);
     }
     else
     {

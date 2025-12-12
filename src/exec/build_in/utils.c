@@ -62,8 +62,8 @@ void change_envp(t_env *env, char ***envp)
     (*envp)[i] = NULL;
 
     // 调试信息：打印结果
-    printf("envp array updated, number of items: %d\n", i);
-    for (int j = 0; (*envp)[j] != NULL; j++) {
+    //printf("envp array updated, number of items: %d\n", i);
+    /*for (int j = 0; (*envp)[j] != NULL; j++) {
         printf("envp[%d]: %s\n", j, (*envp)[j]);
-    }
+    }*/
 }

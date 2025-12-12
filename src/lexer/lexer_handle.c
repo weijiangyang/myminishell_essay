@@ -53,7 +53,6 @@ int	handle_lexer(t_minishell *general)
 {
 	int	i;
 	int	j;
-
 	if (!general || !general->raw_line)
 		return (0);
 	i = 0;

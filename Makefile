@@ -7,11 +7,21 @@ BUILD = build
 
 LIBFT = $(LIBFTDIR)/libft.a
 CC = cc
-CFLAGS = -Wall -Wextra -Werror -I$(INCDIR) -I$(LIBFTDIR)
+
+# 添加 readline 路径（Homebrew 通常安装在 /opt/homebrew）
+READLINE_INC = /opt/homebrew/opt/readline/include
+READLINE_LIB = /opt/homebrew/opt/readline/lib
+
+CFLAGS = -Wall -Wextra -Werror \
+         -I$(INCDIR) \
+         -I$(LIBFTDIR) \
+         -I$(READLINE_INC)
+
+LDFLAGS = -L$(READLINE_LIB)
+LDLIBS = -lreadline
 
 # 查找所有源文件
 SRC = $(shell find $(SRCDIR) -type f -name "*.c")
-
 
 # 将 src/*.c 转换为 build/*.o
 OBJ = $(patsubst $(SRCDIR)/%.c,$(BUILD)/%.o,$(SRC))
@@ -25,7 +35,7 @@ $(LIBFT):
 
 # 链接 minishell
 $(NAME): $(OBJ) $(LIBFT)
-	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) -lreadline -o $(NAME)
+	$(CC) $(LDFLAGS) $(OBJ) $(LIBFT) $(LDLIBS) -o $(NAME)
 
 # 单文件编译规则：build/ 目录自动创建
 $(BUILD)/%.o: $(SRCDIR)/%.c
