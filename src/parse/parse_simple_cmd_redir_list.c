@@ -72,6 +72,8 @@ static char **build_argvs(t_cmd *argv_cmd, t_redir *redir, ast *node)
     int i;
     t_cmd *tmp;
 
+    if (argv_cmd == NULL)
+        return (NULL);
     size = ft_lstsize(argv_cmd);
     argvs = malloc((size + 1) * sizeof(char *));
     if (!argvs)

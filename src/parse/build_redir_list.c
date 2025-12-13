@@ -155,14 +155,12 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *mini
         free_ast_partial(node);
         return NULL;
     }
-
     new_redir = create_redir(minishell, op->tokentype, filetok->str);
     if (!new_redir)
     {
         free_ast_partial(node);
         return NULL;
     }
-
     if (op->tokentype == TOK_HEREDOC)
     {
         if (handle_heredoc(new_redir, minishell) == -1)

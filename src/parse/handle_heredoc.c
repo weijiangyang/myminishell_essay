@@ -23,24 +23,21 @@ int heredoc_loop(int write_fd, const char *delimiter)
     sa.sa_flags = 0; // 关键：不设置 SA_RESTART
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGQUIT, &(struct sigaction){.sa_handler = SIG_IGN}, NULL);
+    sigaction(SIGTSTP, &(struct sigaction){.sa_handler = SIG_IGN}, NULL);
     while (!g_signal)
     {
         write(STDOUT_FILENO, "heredoc> ", 9);
-
         line = get_next_line(STDIN_FILENO);
         if (!line)
             break; // EOF 或因信号中断返回 NULL
-
         size_t len = ft_strlen(line);
         if (len > 0 && line[len - 1] == '\n')
             line[len - 1] = '\0';
-
         if (strcmp(line, delimiter) == 0)
         {
             free(line);
             break;
         }
-
         write(write_fd, line, ft_strlen(line));
         write(write_fd, "\n", 1);
         free(line);
@@ -84,7 +81,6 @@ int handle_heredoc(t_redir *new_redir, t_minishell *shell)
         shell->last_exit_status = 130;
         return 1;
     }
-
     new_redir->heredoc_fd = pipefd[0];
     return 0;
 }

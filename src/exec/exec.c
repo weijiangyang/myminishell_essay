@@ -57,7 +57,7 @@ int apply_redirs(t_redir *r, t_minishell *minishell)
         {
             if (r->heredoc_fd < 0)
             {
-                //fprintf(stderr, "heredoc fd invalid\n");
+                // fprintf(stderr, "heredoc fd invalid\n");
                 minishell->last_exit_status = 130;
                 return 1;
             }
@@ -76,7 +76,6 @@ int apply_redirs(t_redir *r, t_minishell *minishell)
 
 static int apply_redirs_nocmd(t_redir *r)
 {
-
     int fd;
     while (r)
     {
@@ -85,10 +84,9 @@ static int apply_redirs_nocmd(t_redir *r)
             fd = open(r->filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd < 0)
             {
-                perror(r->filename);
+                perror("Error opening output file");
                 return 1;
             }
-
             close(fd);
         }
         else if (r->type == REDIR_APPEND)
@@ -96,7 +94,7 @@ static int apply_redirs_nocmd(t_redir *r)
             fd = open(r->filename, O_WRONLY | O_CREAT | O_APPEND, 0644);
             if (fd < 0)
             {
-                perror(r->filename);
+                perror("Error opening append file");
                 return 1;
             }
             close(fd);
@@ -106,7 +104,7 @@ static int apply_redirs_nocmd(t_redir *r)
             fd = open(r->filename, O_RDONLY);
             if (fd < 0)
             {
-                perror(r->filename);
+                perror("Error opening input file");
                 return 1;
             }
             close(fd);
@@ -148,7 +146,11 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
     // 纯重定向，没有命令
     // 纯重定向
     if (!n->argv && n->redir)
+    {
+
         return apply_redirs_nocmd(n->redir);
+    }
+
     if (is_builtin(n->argv[0]))
     {
         if (n->redir)
@@ -184,11 +186,10 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         t_redir *r = n->redir;
         if (apply_redirs(r, minishell))
         {
-            if(minishell->last_exit_status == 130)
+            if (minishell->last_exit_status == 130)
                 exit(130);
             else
                 exit(1);
-
         }
         execvp(n->argv[0], n->argv);
         perror("execvp");
@@ -196,7 +197,7 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
     }
     else
     {
-        
+
         // parent
         // parent should close heredoc read fds
         setup_parent_exec_signals();
