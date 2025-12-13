@@ -172,7 +172,6 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *mini
             return NULL; // 返回 NULL 上层可检测停止命令执行
         }
     }
-
     redirlst_add_back(&redir, new_redir);
     return redir;
 }

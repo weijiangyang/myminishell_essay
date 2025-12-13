@@ -205,6 +205,7 @@ int main(int argc, char *argv[], char **envp)
 
     while (1)
     {
+        setup_prompt_signals();
         buf = read_complete_line();
         if (!buf)
         {
@@ -239,7 +240,7 @@ int main(int argc, char *argv[], char **envp)
         {
             fprintf(stderr, "tokenize failed\n");
             free(buf);
-            // free(general);
+            free(general);
             continue;
         }
         //=== expander 阶段 ===
@@ -252,7 +253,7 @@ int main(int argc, char *argv[], char **envp)
             // printf("=== AST ===\n");
             // print_ast(root, 0);
             int status = exec_ast(root, &env, general);
-            printf("status is  %d\n", status);
+            //printf("status is  %d\n", status);
             general->last_exit_status = status; // 保存退出码
             free_ast(root);
         }
@@ -261,11 +262,11 @@ int main(int argc, char *argv[], char **envp)
             fprintf(stderr, "Parsing failed.\n");
         }
 
+
         // === 清理内存 ===
-        //free_tokens(general->lexer);
+        free_tokens(general->lexer);
         general->lexer = NULL;
         free(buf);
-        // free(general);
     }
     clear_history();
     free(buf);

@@ -23,7 +23,6 @@ int heredoc_loop(int write_fd, const char *delimiter)
     sa.sa_flags = 0; // 关键：不设置 SA_RESTART
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGQUIT, &(struct sigaction){.sa_handler = SIG_IGN}, NULL);
-
     while (!g_signal)
     {
         write(STDOUT_FILENO, "heredoc> ", 9);
@@ -68,25 +67,16 @@ int handle_heredoc(t_redir *new_redir, t_minishell *shell)
     if (pid == 0)
     {
         close(pipefd[0]);
-       // signal(SIGINT, sigint_heredoc); // 捕获 Ctrl+C
-        //signal(SIGQUIT, SIG_IGN);       // 忽略 'Ctrl+\'
-
         if (heredoc_loop(pipefd[1], new_redir->filename) < 0)
-        {
-            
             exit(130);
-        }
-            
         close(pipefd[1]);
         exit(0);
     }
-
     close(pipefd[1]);
     signal(SIGINT, SIG_IGN);
     signal(SIGQUIT, SIG_IGN);
-
     waitpid(pid, &status, 0);
-
+    
     if ((WIFEXITED(status) && WEXITSTATUS(status) == 130) || WIFSIGNALED(status))
     {
         close(pipefd[0]);

@@ -1,4 +1,8 @@
-hello
-salut
-good morning
-end
+build
+include
+libft
+Makefile
+minishell
+src
+test
+test100

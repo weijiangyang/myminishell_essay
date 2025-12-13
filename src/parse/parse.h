@@ -89,8 +89,6 @@ typedef struct s_ast
     struct s_ast *sub;
 } ast;
 
-
-
 void free_ast(ast *node);
 void free_tokens(t_lexer *tok);
 void free_ast_partial(ast *node);

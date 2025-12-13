@@ -57,7 +57,7 @@ int apply_redirs(t_redir *r, t_minishell *minishell)
         {
             if (r->heredoc_fd < 0)
             {
-                fprintf(stderr, "heredoc fd invalid\n");
+                //fprintf(stderr, "heredoc fd invalid\n");
                 minishell->last_exit_status = 130;
                 return 1;
             }
@@ -180,19 +180,26 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
     if (pid == 0)
     {
         // child
+        setup_child_signals();
         t_redir *r = n->redir;
         if (apply_redirs(r, minishell))
-            exit(130);
+        {
+            if(minishell->last_exit_status == 130)
+                exit(130);
+            else
+                exit(1);
 
+        }
         execvp(n->argv[0], n->argv);
         perror("execvp");
-        exit(0);
+        exit(1);
     }
     else
     {
-        //setup_parent_exec_signals();
+        
         // parent
         // parent should close heredoc read fds
+        setup_parent_exec_signals();
         close_heredoc_fds(n->redir);
         int status = 0;
         waitpid(pid, &status, 0);

@@ -22,9 +22,9 @@ int exec_builtin(ast *node, t_env **env)
 
     // 在这里根据命令名执行
     if (ft_strncmp(node->argv[0], "cd", 2) == 0)
-        ft_cd(node->argv);
+        return ft_cd(node->argv);
     else if (ft_strncmp(node->argv[0], "echo", 4) == 0)
-        ft_echo(node->argv);
+        return ft_echo(node->argv);
     else if (strcmp(node->argv[0], "pwd") == 0)
     {
         char cwd[4096];
@@ -36,10 +36,10 @@ int exec_builtin(ast *node, t_env **env)
         return 1;
     }
     else if (strcmp(node->argv[0], "export") == 0)
-        builtin_export(node->argv, env);
+        return builtin_export(node->argv, env);
 
     else if (strcmp(node->argv[0], "env") == 0)
-        builtin_env(node->argv, *env);
+        return builtin_env(node->argv, *env);
     else if (strcmp(node->argv[0], "exit") == 0)
     {
         int status = 0;
@@ -48,7 +48,7 @@ int exec_builtin(ast *node, t_env **env)
         exit(status);
     }
     else if (strcmp(node->argv[0], "unset") == 0)
-        builtin_unset(node->argv, env);
+        return builtin_unset(node->argv, env);
     // 其它内置命令类似处理
     return 1; // 未知内置
 }
