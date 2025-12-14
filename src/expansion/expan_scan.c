@@ -54,7 +54,7 @@ static int	handle_var_exp(t_exp_data *data, const char *s, int j)
 	if (len > 0)
 	{
 		tmp = env_value_dup(data->minishell, &s[j + 1], len);
-		printf("tmp is %s\n", tmp);
+		//printf("tmp is %s\n", tmp);
 		*data->out = str_join_free(*data->out, tmp);
 		free(tmp);
 		return (1 + len);
