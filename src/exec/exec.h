@@ -24,5 +24,6 @@ void change_envp(t_env *env, char ***envp);
 int is_valid_identifier(const char *s);
 void free_env(t_env *env);
 int builtin_exit(char **argv);
+int builtin_pwd();
 
 #endif

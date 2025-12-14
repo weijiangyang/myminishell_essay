@@ -26,15 +26,7 @@ int exec_builtin(ast *node, t_env **env)
     else if (ft_strncmp(node->argv[0], "echo", 4) == 0)
         return ft_echo(node->argv);
     else if (strcmp(node->argv[0], "pwd") == 0)
-    {
-        char cwd[4096];
-        if (getcwd(cwd, sizeof(cwd)))
-        {
-            printf("%s\n", cwd);
-            return 0;
-        }
-        return 1;
-    }
+        return builtin_pwd();
     else if (strcmp(node->argv[0], "export") == 0)
         return builtin_export(node->argv, env);
 
