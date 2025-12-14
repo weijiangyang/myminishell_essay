@@ -10,7 +10,7 @@ typedef struct s_env {
 int exec_ast(ast *n, t_env **env, t_minishell *minishell);
 int exec_builtin(ast *node, t_env **env);
 int is_builtin(const char *cmd);
-int ft_cd(char **argv);
+int ft_cd(char **argv, t_env **env);
 int ft_echo(char **argv);
 int builtin_env(char **argv, t_env *env);
 void    print_env(t_env *env);
@@ -23,5 +23,6 @@ t_env *find_env_var(t_env *env, const char *key);
 void change_envp(t_env *env, char ***envp);
 int is_valid_identifier(const char *s);
 void free_env(t_env *env);
+int builtin_exit(char **argv);
 
 #endif
