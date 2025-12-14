@@ -24,7 +24,6 @@ int is_valid_identifier(const char *str) {
     return 1;
 }
 
-// 用来设置或更新环境变量
 int builtin_export(char **argv, t_env **env) {
     if (argv[1] == NULL) {
         // 如果没有参数，打印所有的 export 环境变量
@@ -33,19 +32,23 @@ int builtin_export(char **argv, t_env **env) {
     }
 
     for (int i = 1; argv[i]; i++) {
-        // 检查环境变量的合法性
-        if (!is_valid_identifier(argv[i])) {
-            fprintf(stderr, "export: `%s': not a valid identifier\n", argv[i]);
-            return 1;
-        }
-
         // 查找 '=' 字符
         char *equal = strchr(argv[i], '=');
-        if (equal) {
-            // 提取键和值
-            char *key = strndup(argv[i], equal - argv[i]);
-            char *value = strdup(equal + 1);
 
+        // 如果 '=' 存在，提取键和值
+        if (equal) {
+            // 提取键名部分
+            char *key = strndup(argv[i], equal - argv[i]);
+
+            // 检查键名是否合法
+            if (!is_valid_identifier(key)) {
+                fprintf(stderr, "export: `%s': not a valid identifier\n", argv[i]);
+                free(key);
+                return 1;
+            }
+
+            // 提取值部分
+            char *value = strdup(equal + 1);
             if (!key || !value) {
                 perror("Memory allocation failed");
                 return 1;  // 处理内存分配失败的情况
@@ -68,6 +71,13 @@ int builtin_export(char **argv, t_env **env) {
             if (!key) {
                 perror("Memory allocation failed");
                 return 1;  // 处理内存分配失败的情况
+            }
+
+            // 检查键名是否合法
+            if (!is_valid_identifier(key)) {
+                fprintf(stderr, "export: `%s': not a valid identifier\n", argv[i]);
+                free(key);
+                return 1;
             }
 
             // 查找是否已存在该环境变量
