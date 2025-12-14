@@ -1,6 +1,7 @@
 #include "../../../include/minishell.h"
 #include "../../../libft//libft.h"
 
+
 // 删除指定的环境变量
 static void delete_env_var(t_env **env, const char *key)
 {
@@ -43,27 +44,46 @@ static void delete_env_var(t_env **env, const char *key)
     free(temp);
 }
 
-// `unset` 内建命令
+int is_valid_identifier(const char *s)
+{
+    int i = 0;
+
+    if (!s || !s[0])
+        return 0;
+
+    if (!(ft_isalpha(s[0]) || s[0] == '_'))
+        return 0;
+
+    i = 1;
+    while (s[i])
+    {
+        if (!(ft_isalnum(s[i]) || s[i] == '_'))
+            return 0;
+        i++;
+    }
+    return 1;
+}
+
+
 int builtin_unset(char **argv, t_env **env)
 {
-    if (!argv[1])
-    {
-        fprintf(stderr, "unset: not enough arguments\n");
-        return 1;
-    }
+    int status = 0;
 
+    // ⚠️ unset 无参数是合法的
     for (int i = 1; argv[i]; i++)
     {
-        t_env *existing = find_env_var(*env, argv[i]);
-        if (existing)
+        if (!is_valid_identifier(argv[i]))
         {
-            delete_env_var(env, argv[i]);
-            printf("unset: `%s' has been removed.\n", argv[i]);
+            fprintf(stderr,
+                "unset: `%s': not a valid identifier\n",
+                argv[i]);
+            status = 1;
         }
         else
         {
-            fprintf(stderr, "unset: `%s' not found.\n", argv[i]);
+            // 找不到变量也没关系
+            delete_env_var(env, argv[i]);
         }
     }
-    return 0;
+    return status;
 }
