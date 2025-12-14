@@ -269,5 +269,6 @@ int main(int argc, char *argv[], char **envp)
     }
     clear_history();
     free(buf);
+    free(env);
     return 0;
 }

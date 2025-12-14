@@ -43,6 +43,20 @@ void	env_add_back(t_env **env, t_env *new_env)
 	last->next = new_env;
 }
 
+void free_env(t_env *env)
+{
+    t_env *tmp;
+    while (env)
+    {
+        tmp = env;
+        env = env->next;
+        free(tmp->key);
+        free(tmp->value);
+        free(tmp);
+    }
+}
+
+
 t_env *init_env(char **envp)
 {
     t_env *env;

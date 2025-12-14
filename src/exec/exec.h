@@ -22,5 +22,6 @@ int builtin_unset(char **argv, t_env **env);
 t_env *find_env_var(t_env *env, const char *key);
 void change_envp(t_env *env, char ***envp);
 int is_valid_identifier(const char *s);
+void free_env(t_env *env);
 
 #endif
