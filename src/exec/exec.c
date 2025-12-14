@@ -74,7 +74,7 @@ int apply_redirs(t_redir *r, t_minishell *minishell)
     return 0;
 }
 
-static int apply_redirs_nocmd(t_redir *r)
+static int apply_redirs_nocmd(t_redir *r, t_minishell *minishell)
 {
     int fd;
     while (r)
@@ -113,6 +113,7 @@ static int apply_redirs_nocmd(t_redir *r)
         {
             if (r->heredoc_fd < 0)
             {
+                minishell->last_exit_status = 130;
                 fprintf(stderr, "heredoc fd invalid\n");
                 return 1;
             }
@@ -147,8 +148,9 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
     // 纯重定向
     if (!n->argv && n->redir)
     {
-
-        return apply_redirs_nocmd(n->redir);
+        if (minishell->last_exit_status == 130)
+            return (130);
+        return apply_redirs_nocmd(n->redir, minishell);
     }
 
     if (is_builtin(n->argv[0]))

@@ -149,6 +149,8 @@ static char *read_complete_line(void)
     if (!full_prompt)
         return (NULL);
     line = readline(full_prompt);
+    if (!line)
+        return NULL;
     while (has_unclosed_quotes(line))
     {
         next = readline("> ");
@@ -240,7 +242,6 @@ int main(int argc, char *argv[], char **envp)
         {
             fprintf(stderr, "tokenize failed\n");
             free(buf);
-            free(general);
             continue;
         }
         //=== expander 阶段 ===

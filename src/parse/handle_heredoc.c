@@ -16,7 +16,7 @@ int heredoc_loop(int write_fd, const char *delimiter)
     char *line;
 
     g_signal = 0;
-
+    
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);
     sa.sa_handler = sigint_heredoc;
@@ -29,7 +29,13 @@ int heredoc_loop(int write_fd, const char *delimiter)
         write(STDOUT_FILENO, "heredoc> ", 9);
         line = get_next_line(STDIN_FILENO);
         if (!line)
-            break; // EOF 或因信号中断返回 NULL
+        {
+            if(g_signal)              
+                break;//信号中断返回 NULL
+            write(1, "\n", 1);
+            printf("bash: warning: here-document delimited by end-of-file(wanted '%s')\n", delimiter);
+            break; // EOF
+        }   
         size_t len = ft_strlen(line);
         if (len > 0 && line[len - 1] == '\n')
             line[len - 1] = '\0';
@@ -43,7 +49,7 @@ int heredoc_loop(int write_fd, const char *delimiter)
         free(line);
     }
     if (g_signal)
-        return -1;
+           return -1; 
     else
         return 0;
 }
