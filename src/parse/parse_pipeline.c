@@ -37,26 +37,77 @@
  */
 static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes, t_minishell *minishell)
 {
+    ast *right;
+    t_lexer *pt;
+
     while (peek_token(cur) && peek_token(cur)->tokentype == TOK_PIPE)
     {
-        ast *right;
-        ast *node;
+        // 检查是否是连续的管道符号
+        pt = peek_token(cur);
+        if (pt && pt->next && pt->next->tokentype == TOK_PIPE) // 连续的管道符号
+        {
+            ft_putstr_fd("bash: syntax error near unexpected token `|'\n", STDERR_FILENO);
+            return (free_ast(*left), NULL);
+        }
 
-        consume_token(cur);
+        consume_token(cur);  // 消耗管道符号
+
+        // 解析管道右侧的命令
         right = parse_simple_cmd_redir_list(cur, minishell);
-        if (!right)
-           return (free_ast(*left), NULL);
-        node = ft_calloc(1, sizeof(ast));
-        if (!node)
-            return (free_ast(*left), free_ast(right), NULL);
+
+        // 如果右侧命令为空，提示用户继续输入
+        while (!right) // 如果没有右侧命令，继续等待输入
+        {
+            ft_putstr_fd("Error: expected command after pipe. Waiting for input...\n", STDERR_FILENO);
+            
+            // 提示用户输入右侧命令
+            char *buf = readline("> ");
+            if (!buf)  // 如果用户按下 Ctrl+D 退出
+            {
+                printf("exit\n");
+                break;
+            }
+
+            // 创建新的 t_minishell 结构体并解析输入
+            t_minishell *test = calloc(1, sizeof(t_minishell));
+            if (!test) {
+                free(buf);
+                return (free_ast(*left), NULL);  // 内存分配失败，释放内存并返回
+            }
+            test->raw_line = buf;
+            handle_lexer(test);  // 处理 lexer
+
+            // 继续解析右侧命令
+            right = parse_simple_cmd_redir_list(&(test->lexer), minishell);
+            if (!right) {
+                free(buf);
+                free(test);
+                continue;  // 如果右侧命令还是为空，继续提示用户输入
+            }
+
+            free(test);  // 使用完后释放
+        }
+
+        // 创建管道节点并连接左/右命令
+        ast *node = ft_calloc(1, sizeof(ast));
+        if (!node) {
+            free_ast(*left);
+            free_ast(right);
+            return NULL;
+        }
         node->type = NODE_PIPE;
         node->left = *left;
         node->right = right;
         (*n_pipes)++;
         *left = node;
     }
+
     return (*left);
 }
+
+
+
+
 
 /**
  * parse_pipeline
@@ -89,9 +140,9 @@ ast *parse_pipeline(t_lexer **cur, t_minishell *minishell)
         printf("bash: syntax error near unexpected token `|'\n");
         return NULL;
     }
-        
+
     n_pipes = 0;
-    ast *result =  parse_pipeline_1(cur, &left, &n_pipes, minishell);
+    ast *result = parse_pipeline_1(cur, &left, &n_pipes, minishell);
     left->n_pipes = n_pipes;
     return result;
 }
