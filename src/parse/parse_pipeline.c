@@ -64,8 +64,10 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes, t_minishel
             char *buf = readline("> ");
             if (!buf)  // 如果用户按下 Ctrl+D 退出
             {
+                printf("bash: syntax error: unexpected end of file\n");
+
                 printf("exit\n");
-                break;
+                exit(2);
             }
 
             // 创建新的 t_minishell 结构体并解析输入
