@@ -58,7 +58,7 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes, t_minishel
         // 如果右侧命令为空，提示用户继续输入
         while (!right) // 如果没有右侧命令，继续等待输入
         {
-            ft_putstr_fd("Error: expected command after pipe. Waiting for input...\n", STDERR_FILENO);
+            //ft_putstr_fd("Error: expected command after pipe. Waiting for input...\n", STDERR_FILENO);
             
             // 提示用户输入右侧命令
             char *buf = readline("> ");
