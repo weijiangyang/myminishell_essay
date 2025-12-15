@@ -144,6 +144,11 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node, t_minishell *m
         else
             break;
     }
+    if (!argv_cmd && !redir)
+    {
+        minishell->last_exit_status = 2;
+        return NULL;
+    }
     node->redir = redir;
     node->argv = build_argvs(argv_cmd, redir, node);
     return node;

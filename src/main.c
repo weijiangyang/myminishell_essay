@@ -236,7 +236,7 @@ int main(int argc, char *argv[], char **envp)
         if (handle_lexer(general))
         {
             // printf("Lexer tokens:\n");
-            print_lexer(general->lexer);
+            //print_lexer(general->lexer);
         }
         if (!general->lexer)
         {
@@ -258,9 +258,9 @@ int main(int argc, char *argv[], char **envp)
             general->last_exit_status = status; // 保存退出码
             free_ast(root);
         }
-        else
+       else
         {
-            fprintf(stderr, "Parsing failed.\n");
+            //fprintf(stderr, "Parsing failed.\n");
         }
         // === 清理内存 ===
         free_tokens(general->lexer);

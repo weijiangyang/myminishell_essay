@@ -45,7 +45,7 @@ static ast *parse_pipeline_1(t_lexer **cur, ast **left, int *n_pipes, t_minishel
         consume_token(cur);
         right = parse_simple_cmd_redir_list(cur, minishell);
         if (!right)
-            return (free_ast(*left), NULL);
+           return (free_ast(*left), NULL);
         node = ft_calloc(1, sizeof(ast));
         if (!node)
             return (free_ast(*left), free_ast(right), NULL);
@@ -85,9 +85,13 @@ ast *parse_pipeline(t_lexer **cur, t_minishell *minishell)
 
     left = parse_simple_cmd_redir_list(cur, minishell);
     if (!left)
+    {
+        printf("bash: syntax error near unexpected token `|'\n");
         return NULL;
+    }
+        
     n_pipes = 0;
-    parse_pipeline_1(cur, &left, &n_pipes, minishell);
+    ast *result =  parse_pipeline_1(cur, &left, &n_pipes, minishell);
     left->n_pipes = n_pipes;
-    return left;
+    return result;
 }

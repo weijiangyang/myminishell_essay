@@ -104,8 +104,10 @@ void free_ast(ast *node)
     }
     else if (node->type == NODE_PIPE)
     {
-        free_ast(node->left);
-        free_ast(node->right);
+        if (node->left)
+            free_ast(node->left);
+        if (node->right)
+            free_ast(node->right);
     }
     else if (node->type == NODE_SUBSHELL)
         free_ast(node->sub);
