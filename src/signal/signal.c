@@ -7,6 +7,7 @@ void sigint_prompt(int sig)
     rl_on_new_line();
     rl_replace_line("", 0);
     rl_redisplay();
+    g_signal = 1;
 }
 
 void setup_prompt_signals(void)
@@ -23,9 +24,15 @@ void setup_child_signals(void)
     signal(SIGTSTP, SIG_DFL);
 }
 
+void sigint_breakline(int sig)
+{
+    (void) sig;
+    write(1, "\n", 1);
+}
+
 void setup_parent_exec_signals(void)
 {
-    signal(SIGINT, SIG_IGN);
+    signal(SIGINT, sigint_breakline);
     signal(SIGQUIT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
 }

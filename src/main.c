@@ -228,7 +228,6 @@ int main(int argc, char *argv[], char **envp)
             free(buf);
             break;
         }
-
         change_envp(env, &envp);
         general->envp = envp;
         general->raw_line = buf;

@@ -21,6 +21,7 @@ static int is_numeric(const char *s)
 
 int builtin_exit(char **argv)
 {
+    //增加long_min, long_max 整数溢出的检测
     long status = 0;
 
     if (argv[1])

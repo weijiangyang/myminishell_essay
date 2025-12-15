@@ -4,6 +4,7 @@
 // 核心 echo 命令处理函数
 int ft_echo(char **argv)
 {
+    //处理 echo -nnnnnn  hello 的情况
     int i = 1;
     int print_newline = 1; // 默认打印换行符
 

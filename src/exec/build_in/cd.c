@@ -60,6 +60,7 @@ void env_set(t_env **env, const char *key, const char *value)
 
 int ft_cd(char **argv, t_env **env)
 {
+    // 当另一个终端删除了当前文件夹时， 如何才能不崩溃 --等待中
     char cwd[4096];
     char *target;
 

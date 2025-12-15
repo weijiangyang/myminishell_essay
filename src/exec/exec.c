@@ -191,7 +191,7 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
             if (minishell->last_exit_status == 130)
                 exit(130);
             else
-                exit(1);
+                exit(0);
         }
         execvp(n->argv[0], n->argv);
         perror("execvp");
@@ -208,6 +208,11 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         waitpid(pid, &status, 0);
         if (WIFEXITED(status))
             return WEXITSTATUS(status);
+        else if (WIFSIGNALED(status))
+        {
+            minishell->last_exit_status = 130;
+            return WTERMSIG(status);
+        }
         return 1;
     }
 }
