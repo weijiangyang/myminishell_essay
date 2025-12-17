@@ -214,13 +214,15 @@ int main(int argc, char *argv[], char **envp)
     while (1)
     {
         setup_prompt_signals();
-        buf = read_complete_line();
+
         if (g_signal == SIGINT)
         {
             general->last_exit_status = 130;
             g_signal = 0;
+
             continue;
         }
+        buf = read_complete_line();
         if (!buf)
         {
             printf("exit\n");
@@ -266,6 +268,7 @@ int main(int argc, char *argv[], char **envp)
             // print_ast(root, 0);
             int status = exec_ast(root, &env, general);
             // printf("status is  %d\n", status);
+
             general->last_exit_status = status; // 保存退出码
             free_ast(root);
         }
