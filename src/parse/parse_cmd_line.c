@@ -37,6 +37,7 @@ ast *parse_cmdline(t_lexer **cur, t_minishell *minishell)
     ast *root;
     t_lexer *pt;
 
+      
     root = parse_pipeline(cur, minishell);
     if (!root)
         return NULL;

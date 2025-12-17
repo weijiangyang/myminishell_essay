@@ -2,13 +2,13 @@
 
 void sigint_prompt(int sig)
 {
-    (void)sig;
+    g_signal = sig;
     write(1, "\n", 1);
     rl_on_new_line();
     rl_replace_line("", 0);
     rl_redisplay();
-    g_signal = 1;
 }
+
 
 void setup_prompt_signals(void)
 {
@@ -28,6 +28,7 @@ void sigint_breakline(int sig)
 {
     (void) sig;
     write(1, "\n", 1);
+    g_signal = 1;
 }
 
 void setup_parent_exec_signals(void)
@@ -37,12 +38,4 @@ void setup_parent_exec_signals(void)
     signal(SIGTSTP, SIG_IGN);
 }
 
-// 处理 SIGINT (Ctrl+C) 信号，专门针对 heredoc
-void sigint_heredoc_handler(int sig)
-{
-    (void)sig; // 防止编译警告
 
-    // 设置全局标志，表示收到 SIGINT 信号
-    g_signal = 1;
-    write(STDOUT_FILENO, "\n", 1); // 输出换行符，以便用户看到新的提示符
-}

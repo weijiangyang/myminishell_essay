@@ -1,6 +1,6 @@
 #include "../../include/minishell.h"
 
-int apply_redirs(t_redir *r, t_minishell *minishell)
+int apply_redirs(t_redir *r)
 {
     int fd;
     while (r)
@@ -56,11 +56,7 @@ int apply_redirs(t_redir *r, t_minishell *minishell)
         else if (r->type == HEREDOC) // << (heredoc_fd 已保存为读端)
         {
             if (r->heredoc_fd < 0)
-            {
-                // fprintf(stderr, "heredoc fd invalid\n");
-                minishell->last_exit_status = 130;
                 return 1;
-            }
             if (dup2(r->heredoc_fd, STDIN_FILENO) < 0)
             {
                 perror("dup2 heredoc");
@@ -74,7 +70,7 @@ int apply_redirs(t_redir *r, t_minishell *minishell)
     return 0;
 }
 
-static int apply_redirs_nocmd(t_redir *r, t_minishell *minishell)
+static int apply_redirs_nocmd(t_redir *r)
 {
     int fd;
     while (r)
@@ -112,11 +108,7 @@ static int apply_redirs_nocmd(t_redir *r, t_minishell *minishell)
         else if (r->type == HEREDOC)
         {
             if (r->heredoc_fd < 0)
-            {
-                minishell->last_exit_status = 130;
-                fprintf(stderr, "heredoc fd invalid\n");
                 return 1;
-            }
             close(r->heredoc_fd);
             r->heredoc_fd = -1;
         }
@@ -150,7 +142,7 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
     {
         if (minishell->last_exit_status == 130)
             return (130);
-        return apply_redirs_nocmd(n->redir, minishell);
+        return apply_redirs_nocmd(n->redir);
     }
 
     if (is_builtin(n->argv[0]))
@@ -160,7 +152,7 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
             // 临时保存标准输入输出
             int stdin_bak = dup(STDIN_FILENO);
             int stdout_bak = dup(STDOUT_FILENO);
-            if (apply_redirs(n->redir, minishell) < 0)
+            if (apply_redirs(n->redir) < 0)
                 return 1;
             int rc = exec_builtin(n, env);
             // 恢复标准输入输出
@@ -186,7 +178,8 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         // child
         setup_child_signals();
         t_redir *r = n->redir;
-        if (apply_redirs(r, minishell))
+        apply_redirs(r);
+        if (apply_redirs(r))
         {
             if (minishell->last_exit_status == 130)
                 exit(130);
@@ -204,15 +197,14 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         // parent should close heredoc read fds
         setup_parent_exec_signals();
         close_heredoc_fds(n->redir);
-        int status = 0;
+        int status;
         waitpid(pid, &status, 0);
+
         if (WIFEXITED(status))
-            return WEXITSTATUS(status);
+            minishell->last_exit_status = WEXITSTATUS(status);
         else if (WIFSIGNALED(status))
-        {
-            minishell->last_exit_status = 130;
-            return WTERMSIG(status);
-        }
+            minishell->last_exit_status = 128 + WTERMSIG(status);
+
         return 1;
     }
 }

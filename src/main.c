@@ -204,11 +204,23 @@ int main(int argc, char *argv[], char **envp)
     t_minishell *general;
     t_env *env = init_env(envp);
     general = ft_calloc(1, sizeof(t_minishell));
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = sigint_prompt;
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+    signal(SIGQUIT, SIG_IGN);
 
     while (1)
     {
         setup_prompt_signals();
         buf = read_complete_line();
+        if (g_signal == SIGINT)
+        {
+            general->last_exit_status = 130;
+            g_signal = 0;
+            continue;
+        }
         if (!buf)
         {
             printf("exit\n");
@@ -235,7 +247,7 @@ int main(int argc, char *argv[], char **envp)
         if (handle_lexer(general))
         {
             // printf("Lexer tokens:\n");
-            //print_lexer(general->lexer);
+            // print_lexer(general->lexer);
         }
         if (!general->lexer)
         {
@@ -253,13 +265,13 @@ int main(int argc, char *argv[], char **envp)
             // printf("=== AST ===\n");
             // print_ast(root, 0);
             int status = exec_ast(root, &env, general);
-            //printf("status is  %d\n", status);
+            // printf("status is  %d\n", status);
             general->last_exit_status = status; // 保存退出码
             free_ast(root);
         }
-       else
+        else
         {
-            //fprintf(stderr, "Parsing failed.\n");
+            // fprintf(stderr, "Parsing failed.\n");
         }
         // === 清理内存 ===
         free_tokens(general->lexer);

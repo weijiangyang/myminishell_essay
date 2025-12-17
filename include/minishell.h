@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <limits.h>
+#include <termios.h>
 
 typedef struct s_minishell t_minishell;
 
