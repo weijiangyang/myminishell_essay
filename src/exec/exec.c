@@ -178,7 +178,6 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         // child
         setup_child_signals();
         t_redir *r = n->redir;
-        apply_redirs(r);
         if (apply_redirs(r))
         {
             if (minishell->last_exit_status == 130)
@@ -205,7 +204,7 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         else if (WIFSIGNALED(status))
             minishell->last_exit_status = 128 + WTERMSIG(status);
 
-        return 1;
+        return minishell->last_exit_status;
     }
 }
 
