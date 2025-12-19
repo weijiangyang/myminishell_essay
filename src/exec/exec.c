@@ -187,7 +187,7 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         }
         execvp(n->argv[0], n->argv);
         perror("execvp");
-        exit(1);
+        exit(127);
     }
     else
     {
@@ -199,11 +199,28 @@ static int exec_cmd_node(ast *n, t_env **env, t_minishell *minishell)
         int status;
         waitpid(pid, &status, 0);
 
-        if (WIFEXITED(status))
+        if (WIFSIGNALED(status))
+        {
+            // WTERMSIG 获取终止子进程的信号编号
+            if (WTERMSIG(status) == SIGQUIT)
+            {
+                // 标准 Bash 行为：在 stderr 或 stdout 打印 "Quit"
+                // 注意：\n 之前通常会有个 (core dumped)，取决于系统配置
+                write(1, "Quit (core dumped)\n", 19);
+                minishell->last_exit_status = 131; // 128 + 3
+            }
+            else if (WTERMSIG(status) == SIGINT)
+            {
+                // Ctrl+C 终止时，通常只需要换行
+                write(1, "\n", 1);
+                minishell->last_exit_status = 130; // 128 + 2
+            }
+        }
+        else if (WIFEXITED(status))
+        {
+            // 正常退出，记录退出码
             minishell->last_exit_status = WEXITSTATUS(status);
-        else if (WIFSIGNALED(status))
-            minishell->last_exit_status = 128 + WTERMSIG(status);
-
+        }
         return minishell->last_exit_status;
     }
 }

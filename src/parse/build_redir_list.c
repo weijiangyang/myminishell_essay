@@ -42,7 +42,7 @@
  *   4. heredoc_fd 初始化为 -1，表示暂未创建管道。
  *   5. 返回配置完成的节点。
  */
-static t_redir *create_redir(t_minishell *minishell,  tok_type type, char *content)
+static t_redir *create_redir(t_minishell *minishell, tok_type type, char *content)
 {
     t_redir *new_node = ft_calloc(1, sizeof(t_redir));
     if (!new_node)
@@ -101,11 +101,11 @@ static void redirlst_add_back(t_redir **lst, t_redir *new_node)
     t_redir *tmp;
 
     if (!lst || !new_node)
-        return ;
+        return;
     if (*lst == NULL)
     {
         *lst = new_node;
-        return ;
+        return;
     }
     tmp = *lst;
     while (tmp->next)
@@ -165,7 +165,6 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *mini
     {
         if (handle_heredoc(new_redir, minishell) == -1)
         {
-            // heredoc 被 Ctrl+C 中断，shell->last_exit_status 已设置 130
             redirlst_add_back(&redir, new_redir);
             return NULL; // 返回 NULL 上层可检测停止命令执行
         }
@@ -173,4 +172,3 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *mini
     redirlst_add_back(&redir, new_redir);
     return redir;
 }
-
