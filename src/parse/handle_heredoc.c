@@ -18,6 +18,7 @@ int heredoc_loop(int write_fd, const char *delimiter)
 
     struct sigaction sa = {.sa_handler = sigint_heredoc, .sa_flags = 0};
     sigaction(SIGINT, &sa, NULL);
+    signal(SIGQUIT, SIG_IGN);
 
     while (1)
     {
@@ -104,6 +105,7 @@ int handle_heredoc(t_redir *new_redir, t_minishell *shell)
     signal(SIGINT, SIG_IGN);  // 忽略 Ctrl-C
     signal(SIGQUIT, SIG_IGN); // 忽略 'Ctrl-\'
     waitpid(pid, &status, 0);
+    setup_prompt_signals();
 
     if (WIFEXITED(status) && WEXITSTATUS(status) == 130)
     {
