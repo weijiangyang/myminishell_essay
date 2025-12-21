@@ -152,6 +152,8 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *mini
 
     if (!op || !filetok || filetok->tokentype != TOK_WORD)
     {
+        fprintf(stderr, "bash: syntax error near unexpected token `newline'\n");
+        minishell->last_exit_status = 2;
         free_ast_partial(node);
         return NULL;
     }
@@ -166,6 +168,7 @@ t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *mini
         if (handle_heredoc(new_redir, minishell) == -1)
         {
             redirlst_add_back(&redir, new_redir);
+
             return NULL; // 返回 NULL 上层可检测停止命令执行
         }
     }

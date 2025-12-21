@@ -1,6 +1,5 @@
 #include "../../include/minishell.h"
 
-
 volatile sig_atomic_t g_signal; // 唯一全局变量
 
 /* SIGINT handler */
@@ -29,34 +28,41 @@ int heredoc_loop(int write_fd, const char *delimiter)
         line = get_next_line(STDIN_FILENO);
 
         // --- 处理 Ctrl+C ---
-        if (g_signal == SIGINT) {
-            free(line); 
+        if (g_signal == SIGINT)
+        {
+            free(line);
             free(full_line);
             write(1, "\n", 1);
             return -1;
         }
 
         // --- 处理 Ctrl+D ---
-        if (!line) {
-            if (full_line == NULL) { // 纯空行按 Ctrl+D
+        if (!line)
+        {
+            if (full_line == NULL)
+            { // 纯空行按 Ctrl+D
                 printf("bash: warning: ... (wanted '%s')\n", delimiter);
                 break;
             }
             // 如果有残留内容按 Ctrl+D，Bash 会将其视为一行处理
             line = full_line;
             full_line = NULL;
-        } 
-        else if (full_line) { // 如果之前有没写完的片段，拼接起来
+        }
+        else if (full_line)
+        { // 如果之前有没写完的片段，拼接起来
             char *tmp = ft_strjoin(full_line, line);
-            free(full_line); free(line);
+            free(full_line);
+            free(line);
             line = tmp;
         }
 
         // --- 判断是否读到了完整的一行 ---
         size_t len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') {
+        if (len > 0 && line[len - 1] == '\n')
+        {
             line[len - 1] = '\0'; // 去掉换行符
-            if (strcmp(line, delimiter) == 0) {
+            if (strcmp(line, delimiter) == 0)
+            {
                 free(line);
                 break;
             }
@@ -64,7 +70,9 @@ int heredoc_loop(int write_fd, const char *delimiter)
             write(write_fd, "\n", 1);
             free(line);
             full_line = NULL; // 清空暂存，下次循环会打印提示符
-        } else {
+        }
+        else
+        {
             // 没有换行符，说明用户按了 Ctrl+D
             // 我们暂存这段文字，进入下一次 read，不打印提示符
             full_line = line;
@@ -73,19 +81,18 @@ int heredoc_loop(int write_fd, const char *delimiter)
     return 0;
 }
 
-
-
-
 int handle_heredoc(t_redir *new_redir, t_minishell *shell)
 {
     int pipefd[2];
     pid_t pid;
     int status;
 
-    if (pipe(pipefd) < 0) return -1;
+    if (pipe(pipefd) < 0)
+        return -1;
 
     pid = fork();
-    if (pid < 0) return -1;
+    if (pid < 0)
+        return -1;
 
     if (pid == 0)
     {
@@ -107,7 +114,7 @@ int handle_heredoc(t_redir *new_redir, t_minishell *shell)
         close(pipefd[0]);
         new_redir->heredoc_fd = -1;
         shell->last_exit_status = 130;
-        return 1;
+        return -1;
     }
 
     new_redir->heredoc_fd = pipefd[0];

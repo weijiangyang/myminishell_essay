@@ -65,6 +65,8 @@ int apply_redirs(t_redir *r)
             close(r->heredoc_fd);
             r->heredoc_fd = -1;
         }
+        else
+            return 1;
         r = r->next;
     }
     return 0;

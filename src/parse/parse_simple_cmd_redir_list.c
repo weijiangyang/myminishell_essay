@@ -138,7 +138,12 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node, t_minishell *m
     while ((pt = peek_token(cur)) != NULL)
     {
         if (is_redir_token(pt))
+        {
             redir = build_redir(cur, node, redir, minishell);
+            if (!redir)
+                return NULL; // ❗ 立刻终止解析
+        }
+
         else if (pt->tokentype == TOK_WORD)
             ft_lstadd_back(&argv_cmd, create_argv(consume_token(cur)->str));
         else
@@ -146,7 +151,8 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node, t_minishell *m
     }
     if (!argv_cmd && !redir)
     {
-        minishell->last_exit_status = 2;
+        if (minishell->last_exit_status != 130)
+            minishell->last_exit_status = 2;
         return NULL;
     }
     node->redir = redir;

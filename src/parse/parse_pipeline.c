@@ -136,15 +136,25 @@ ast *parse_pipeline(t_lexer **cur, t_minishell *minishell)
     ast *left;
     int n_pipes;
 
-    left = parse_simple_cmd_redir_list(cur, minishell);
-    if (!left)
+    // 🚨 如果一开始就是 PIPE，直接报错
+    if (peek_token(cur) && peek_token(cur)->tokentype == TOK_PIPE)
     {
-        printf("bash: syntax error near unexpected token `|'\n");
+        ft_putstr_fd(
+            "bash: syntax error near unexpected token `|'\n",
+            STDERR_FILENO
+        );
         return NULL;
     }
 
+    left = parse_simple_cmd_redir_list(cur, minishell);
+    if (!left)
+        return NULL;  // 其他语法错误，不是 PIPE
+
     n_pipes = 0;
     ast *result = parse_pipeline_1(cur, &left, &n_pipes, minishell);
+    if (!result)
+        return NULL;
+
     left->n_pipes = n_pipes;
     return result;
 }
