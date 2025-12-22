@@ -139,8 +139,8 @@ static ast *parse_normal_cmd_redir_list(t_lexer **cur, ast *node, t_minishell *m
     {
         if (is_redir_token(pt))
         {
-            redir = build_redir(cur, node, redir, minishell);
-            if (!redir)
+            int result = build_redir(cur, &redir, minishell);
+            if (!result)
                 return NULL; // ❗ 立刻终止解析
         }
 

@@ -42,35 +42,30 @@
  *   4. heredoc_fd 初始化为 -1，表示暂未创建管道。
  *   5. 返回配置完成的节点。
  */
-static t_redir *create_redir(t_minishell *minishell, tok_type type, char *content)
+static t_redir	*create_redir(tok_type type, char *content)
 {
-    t_redir *new_node = ft_calloc(1, sizeof(t_redir));
-    if (!new_node)
-        return NULL;
-    char *new_content = ft_strdup(content);
-    if (!new_content)
-    {
-        free(new_node);
-        return NULL;
-    }
-    new_node->filename = ft_strdup(expander_str(minishell, new_content));
-    if (!new_node->filename)
-    {
-        free(new_node);
-        return NULL;
-    }
-    new_node->next = NULL;
-    new_node->heredoc_fd = -1; // 明确无效值
+	t_redir	*new_node;
 
-    if (type == TOK_REDIR_IN)
-        new_node->type = REDIR_INPUT;
-    else if (type == TOK_REDIR_OUT)
-        new_node->type = REDIR_OUTPUT;
-    else if (type == TOK_APPEND)
-        new_node->type = REDIR_APPEND;
-    else if (type == TOK_HEREDOC)
-        new_node->type = HEREDOC;
-    return new_node;
+	new_node = ft_calloc(1, sizeof(t_redir));
+	if (!new_node)
+		return (NULL);
+	new_node->filename = ft_strdup(content);
+	if (!new_node->filename)
+	{
+		free(new_node);
+		return (NULL);
+	}
+	new_node->next = NULL;
+	new_node->heredoc_fd = -1;
+	if (type == TOK_REDIR_IN)
+		new_node->type = REDIR_INPUT;
+	else if (type == TOK_REDIR_OUT)
+		new_node->type = REDIR_OUTPUT;
+	else if (type == TOK_APPEND)
+		new_node->type = REDIR_APPEND;
+	else if (type == TOK_HEREDOC)
+		new_node->type = HEREDOC;
+	return (new_node);
 }
 
 /**
@@ -144,34 +139,35 @@ static void redirlst_add_back(t_redir **lst, t_redir *new_node)
  *   5. 将新节点追加到 redir 链表末尾。
  *   6. 返回更新后的 redir 链表头。
  */
-t_redir *build_redir(t_lexer **cur, ast *node, t_redir *redir, t_minishell *minishell)
+// 修改返回值为 int 或 bool，通过参数返回链表
+int build_redir(t_lexer **cur, t_redir **redir_list, t_minishell *minishell)
 {
     t_lexer *op = consume_token(cur);
-    t_lexer *filetok = consume_token(cur);
-    t_redir *new_redir;
+    if (!op) return (0);
 
-    if (!op || !filetok || filetok->tokentype != TOK_WORD)
+    t_lexer *filetok = consume_token(cur);
+    if (!filetok || filetok->tokentype != TOK_WORD)
     {
-        fprintf(stderr, "bash: syntax error near unexpected token `newline'\n");
+        ft_putstr_fd("minishell: syntax error near unexpected token\n", 2);
         minishell->last_exit_status = 2;
-        free_ast_partial(node);
-        return NULL;
+        return (0);
     }
-    new_redir = create_redir(minishell, op->tokentype, filetok->str);
-    if (!new_redir)
-    {
-        free_ast_partial(node);
-        return NULL;
-    }
+
+    t_redir *new_redir = create_redir(op->tokentype, filetok->str);
+    if (!new_redir) return (0);
+
     if (op->tokentype == TOK_HEREDOC)
     {
         if (handle_heredoc(new_redir, minishell) == -1)
         {
-            redirlst_add_back(&redir, new_redir);
-
-            return NULL; // 返回 NULL 上层可检测停止命令执行
+            // 失败时直接销毁当前这个无效节点，不加入链表
+            free(new_redir->filename);
+            free(new_redir);
+            return (0); 
         }
     }
-    redirlst_add_back(&redir, new_redir);
-    return redir;
+
+    // 正确挂载到外部传入的链表地址
+    redirlst_add_back(redir_list, new_redir);
+    return (1);
 }
